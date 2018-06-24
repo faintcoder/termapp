@@ -1,0 +1,5 @@
+#!/bin/bash
+pip3 install -e .
+echo "Packge locally installed with symlinks."
+exit 0
+
