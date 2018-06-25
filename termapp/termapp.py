@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 import urwid
-from .common           import *
-from .prompt           import Prompt
-from .line_base        import LineBase
-from .line_text        import LineText
-from .page_base        import PageBase
-from .page             import Page
-from .header           import Header
-from .footer           import Footer
-from .geometry         import Geometry
-from .chapter          import Chapter
-from .chapter_manager  import ChapterManager
+from .common              import *
+from .prompt              import Prompt
+from .line_base           import LineBase
+from .line_text           import LineText
+from .page_base           import PageBase
+from .page                import Page
+from .header              import Header
+from .footer              import Footer
+from .geometry            import Geometry
+from .chapter             import Chapter
+from .chapter_manager     import ChapterManager
+from .command_dispatcher  import CommandDispatcher
 
 
 class TermApp(urwid.WidgetWrap):
@@ -18,10 +19,16 @@ class TermApp(urwid.WidgetWrap):
 	def __init__(self, create_header = True, create_footer = True, create_header_divider = False):
 		# Public properties.
 		self.wheelScrollLines           = 1
-		self.quitOnESC                  = True
+		self.quitOnESC                  = False
 		self.logger                     = None
 		self.loop                       = None
 		self.screen                     = None
+		# Create the command dispatcher
+		self.commandDispatcher          = CommandDispatcher()
+		# Register basic commands.
+		self.commandDispatcher.registerCommand("quit", self.quit)
+		self.commandDispatcher.registerAlias("quit", "exit")
+		self.commandDispatcher.registerAlias("quit", "q")
 		# Create prompt object
 		self.prompt                     = Prompt()
 		# Create chapters and pages.
@@ -139,8 +146,15 @@ class TermApp(urwid.WidgetWrap):
 		return True
 
 
-	def onCommand(self, command_text):
-		self.bufferAppendLineTextToCurrentPage(command_text, "normal_color") # REMOVE THIS!
+	def onText(self, command_text):
+		return True
+
+
+	def onCommand(self, command, params):
+		result = self.commandDispatcher.dispatch(command, params)
+		if not result:
+			self.printErr("Unknown command `%s`." % (command))
+			return False
 		return True
 
 
@@ -174,8 +188,13 @@ class TermApp(urwid.WidgetWrap):
 		if len(command_text) == 0:
 			return False
 		self.prompt.saveCommandInHistory(command_text)
-		self.onCommand(command_text)
-		return True
+		if self.onText(command_text):
+			params   = command_text.split(" ")
+			command  = params[0]
+			params.pop(0)
+			if self.onCommand(command, params):
+				return True
+		return False
 
 	#
 	# Palette functions
@@ -213,6 +232,28 @@ class TermApp(urwid.WidgetWrap):
 	#
 	# Buffer functions.
 	#
+	def print(self, text, text_style = "normal_color"):
+		splitted_text = text.split("\n")
+		for line in splitted_text:
+			self.currentPageAppendText(line, text_style)
+
+
+	def printHighlight(self, text):
+		self.print(text, "highlight_color")
+
+
+	def printErr(self, text):
+		self.print(text, "error_color")
+
+
+	def printWarn(self, text):
+		self.print(text, "warning_color")
+
+
+	def printSuccess(self, text):
+		self.print(text, "success_color")
+
+
 	def currentPageAppendText(self, line_text, text_style = "normal_color"):
 		current_page = self.chapters.getCurrentPage()
 		current_page.bufferAddLineText(line_text, text_style)

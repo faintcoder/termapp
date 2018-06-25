@@ -6,13 +6,14 @@ import termapp
 class MyTerminal(termapp.TermApp):
 	
 	def __init__(self):
-		super().__init__(create_header=True, create_footer=False)
+		super().__init__(create_header=True, create_footer=True)
 		self.prompt.autocompletionAddWords(['hello', 'howareyou?'])
+		self.commandDispatcher.registerCommand("echo", self.echo, join_params=True)
+		self.commandDispatcher.registerAlias("echo", "e")
 
 
-	def onCommand(self, command_text):
-		self.currentPageAppendText(command_text, "normal_color")
-		return True
+	def echo(self, params):
+		self.printSuccess("echo:  " + params)
 
 
 	def onKeyPress(self, key):
