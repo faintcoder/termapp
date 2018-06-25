@@ -16,7 +16,7 @@ from .command_dispatcher  import CommandDispatcher
 
 class TermApp(urwid.WidgetWrap):
 
-	def __init__(self, create_header = True, create_footer = True, create_header_divider = False):
+	def __init__(self, prompt_caption = DEFAULT_PROMPT_CAPTION, create_header = True, create_footer = True, create_header_divider = False):
 		# Public properties.
 		self.wheelScrollLines           = 1
 		self.quitOnESC                  = False
@@ -30,7 +30,7 @@ class TermApp(urwid.WidgetWrap):
 		self.commandDispatcher.registerAlias("quit", "exit")
 		self.commandDispatcher.registerAlias("quit", "q")
 		# Create prompt object
-		self.prompt                     = Prompt()
+		self.prompt                     = Prompt(prompt_caption=prompt_caption)
 		# Create chapters and pages.
 		self.chapters                   = ChapterManager()
 		# Get screen object and screen's cols/rows
@@ -76,6 +76,7 @@ class TermApp(urwid.WidgetWrap):
 				("footer_color"           , "white"        , "dark blue"      ),
         ("normal_color"           , "light gray"   , "black"          ),
 				("error_color"            , "dark red"     , "black"          ),
+				("notifier_color"         , "black"        , "yellow"         ),
 				("warning_color"          , "yellow"       , "black"          ),
 				("success_color"          , "light green"  , "black"          ),
 				("fatal_color"            , "white"        , "light red"      )
@@ -166,9 +167,13 @@ class TermApp(urwid.WidgetWrap):
 	#
 	def start(self):
 		# Create the loop object.
-		self.loop = urwid.MainLoop(self, palette = self._palette)
-		if self.loop:
-			if self.onStart(self.loop):
+		loop = urwid.MainLoop(self, palette = self._palette)
+		if loop:
+			self.loop        = loop
+			self.header.loop = loop
+			self.footer.loop = loop
+			self.prompt.loop = loop
+			if self.onStart(loop):
 				return True
 		return False
 

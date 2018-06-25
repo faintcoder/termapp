@@ -2,11 +2,7 @@
 import urwid
 import collections
 from .common           import *
-
-
-def _prompt_flash_callback(_loop, _data):
-		_data._prompt_flash_on_off()
-		_data._prompt_flash_continue_timer()
+from .timer_callbacks  import _prompt_flash_callback
 
 
 class Prompt():
@@ -22,7 +18,7 @@ class Prompt():
 			self.promptCaption            = DEFAULT_PROMPT_CAPTION
 
 		self.widget = urwid.Edit(self.promptCaption, "", multiline=False)
-		self.loop   = None
+		self.loop                       = None
 
 		self._promptDefaultStyle        = "prompt_color6"
 		self._promptDefaultStyleFlash   = "prompt_color_flash6"

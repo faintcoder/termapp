@@ -28,9 +28,9 @@ class MyTerminal(termapp.TermApp):
 		if key == "f8":
 			self.prompt.stopFlashing()
 		if key == "f5":
-			self.header.setText("Hello!")
+			self.header.pushNotifier("Hello! Long wait", 5)
 		if key == "f6":
-			self.footer.setText("Goodbye!")
+			self.header.pushNotifier("Hello! Short wait", 1)
 		return True
 
 

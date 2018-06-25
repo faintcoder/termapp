@@ -7,6 +7,8 @@ class Footer():
 	def __init__(self, prompt_widget, create_text_footer = True, palette_entry_name = "footer_color"):
 		# Create the list where to pile footer widgets.
 		widget_pile_list       = []
+		# Allow space for the loop object.
+		self.loop              = None
 		# Create the text widget, and add to list.
 		if create_text_footer:
 			footer_widget        = urwid.Text((palette_entry_name, ""), wrap=urwid.CLIP)
