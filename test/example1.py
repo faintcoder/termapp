@@ -16,6 +16,11 @@ class MyTerminal(termapp.TermApp):
 		self.printSuccess("echo:  " + params)
 
 
+	def onDialog(self, tag, result):
+		self.header.setText(result)
+		return True
+
+
 	def onKeyPress(self, key):
 		if key == "f2":
 			self.switchToNextPage()
@@ -28,9 +33,9 @@ class MyTerminal(termapp.TermApp):
 		if key == "f8":
 			self.prompt.stopFlashing()
 		if key == "f5":
-			self.header.pushNotifier("Hello! Long wait", 5)
+			self.startDialog("Are you sure?", buttons=1)
 		if key == "f6":
-			self.header.pushNotifier("Hello! Short wait", 1)
+			self.cancelDialog()
 		return True
 
 

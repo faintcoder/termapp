@@ -12,6 +12,7 @@ from .geometry            import Geometry
 from .chapter             import Chapter
 from .chapter_manager     import ChapterManager
 from .command_dispatcher  import CommandDispatcher
+from .dialog              import Dialog
 
 
 class TermApp(urwid.WidgetWrap):
@@ -43,10 +44,10 @@ class TermApp(urwid.WidgetWrap):
 		# Create the footer object.
 		self.footer                     = Footer(self.prompt.widget, create_text_footer=create_footer)
 		#Get the current page `urwid.ListBox` object.
-		current_page_listbox = self.chapters.getCurrentPage().widgetListBox
+		self.body = self.chapters.getCurrentPage().widgetListBox
 		# Create the main application window, or the `urwid.Frame` object.
 		self._w = urwid.Frame(header=self.header.widget,
-                             body=current_page_listbox,
+                             body=self.body,
                              footer=self.footer.widget,
                              focus_part="footer")
 		# Get data to calculate urwid.Frame's body columns and rows,
@@ -79,13 +80,24 @@ class TermApp(urwid.WidgetWrap):
 				("notifier_color"         , "black"        , "yellow"         ),
 				("warning_color"          , "yellow"       , "black"          ),
 				("success_color"          , "light green"  , "black"          ),
-				("fatal_color"            , "white"        , "light red"      )
+				("fatal_color"            , "white"        , "light red"      ),
+				("dialog_banner"          , "white"        , "dark red"       ),
+				("dialog_background"      , "white"        , "dark gray"      ),
+				("dialog_buttons"         , "black"        , "yellow"         )
     ]
+		self._shownDialog = False
 
 	#
 	# Urwid events callbacks.
 	#
 	def keypress(self, size, key):
+		if self._shownDialog == True:
+			if key in ("enter", "esc", "left", "right"):
+				super(TermApp, self).keypress(size, key)
+			else:
+				return
+			#self.header.setText("key pressed: %s" % (key,))
+			#return
 		# Quit on ESC
 		if key is "esc":
 			if self.quitOnESC:
@@ -162,12 +174,16 @@ class TermApp(urwid.WidgetWrap):
 	def onStart(self, loop):
 		return True
 
+
+	def onDialog(self, tag, result):
+		return True
+
 	#
 	# Main functions.
 	#
 	def start(self):
 		# Create the loop object.
-		loop = urwid.MainLoop(self, palette = self._palette)
+		loop = urwid.MainLoop(self, palette=self._palette, pop_ups=True)
 		if loop:
 			self.loop        = loop
 			self.header.loop = loop
@@ -200,6 +216,31 @@ class TermApp(urwid.WidgetWrap):
 			if self.onCommand(command, params):
 				return True
 		return False
+
+	#
+	# Dialog functions.
+	#
+	def startDialog(self, text, title="Warning!", buttons=2, button1_text="Ok", button2_text="Cancel"):
+		if self._shownDialog == True:
+			return
+		dialog = Dialog(
+				self, text=text,
+				title=title,
+				buttons=buttons,
+				button1_text=button1_text,
+				button2_text=button2_text
+			)
+		self._w.body = dialog.overlay
+		self._w.set_focus("body")
+		self._shownDialog = True
+
+
+	def cancelDialog(self):
+		if self._shownDialog == False:
+			return
+		self._w.body = self.body
+		self._w.set_focus("footer")
+		self._shownDialog = False
 
 	#
 	# Palette functions
