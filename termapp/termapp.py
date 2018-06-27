@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 import urwid
 from .common              import *
+from .timer_callbacks     import _mainapp_call_timer_callback
 from .prompt              import Prompt
 from .line_base           import LineBase
 from .line_text           import LineText
+from .line_progress       import LineProgress
 from .page_base           import PageBase
 from .page                import Page
 from .header              import Header
@@ -61,7 +63,7 @@ class TermApp(urwid.WidgetWrap):
 		body_rows                       = self.totalRows - (header_rows + footer_rows)
 		body_columns                    = self.totalColumns
 		self.geometry                   = Geometry(body_rows, body_columns, header_rows, footer_rows)
-		# Create color palette.
+		# Create color palette.        foreground         background
 		self._palette = [
         ("prompt_color_flash"     , "black"        , "yellow"         ),
 				("prompt_color"           , "light gray"   , "black"          ),
@@ -86,7 +88,9 @@ class TermApp(urwid.WidgetWrap):
 				("dialog_banner"          , "white"        , "dark red"       ),
 				("dialog_background"      , "white"        , "dark gray"      ),
 				("dialog_buttons"         , "black"        , "yellow"         ),
-				("page_descriptor"        , "yellow"       , "dark gray"      )
+				("page_descriptor"        , "yellow"       , "dark gray"      ),
+				("completed_progressbar"  , "black"        , "light magenta"  ),
+				("uncompleted_progressbar", "white"        , "dark magenta"   ),
     ]
 		# Private data
 		self._pageNotifier  = None
@@ -332,31 +336,47 @@ class TermApp(urwid.WidgetWrap):
 		self.print(text, "success_color")
 
 
-	def currentPageAppendText(self, line_text, text_style = "normal_color"):
+	def currentPageAppendLine(self, line):
 		current_page = self.chapters.getCurrentPage()
-		current_page.bufferAddLineText(line_text, text_style)
+		current_page.bufferAddLine(line)
 		current_page.setFocusToLastLine()
 
 
-	def pageAppendText(self, page_index, line_text, text_style = "normal_color"):
+	def currentPageAppendText(self, text, style = "normal_color"):
+		current_page = self.chapters.getCurrentPage()
+		current_page.bufferAddLineText(text, style)
+		current_page.setFocusToLastLine()
+
+
+	def pageAppendText(self, page_index, text, style = "normal_color"):
 		chapter = self.chapters.getCurrentChapter()
 		if chapter:
 			page = chapter.getPageFromIndex(page_index)
 			if page:
-				page.bufferAddLineText(line_text, text_style)
+				page.bufferAddLineText(text, style)
 				current_page = self.chapters.getCurrentPage()
 				if page == current_page:
 					page.setFocusToLastLine()
 
 
-	def appendText(self, chapter_name, page_index, line_text, text_style = "normal_color"):
+	def appendText(self, chapter_name, page_index, text, style = "normal_color"):
 		chapter = self.chapters.getChapter(chapter_name)
 		if chapter:
 			page = chapter.getPageFromIndex(page_index)
 			if page:
-				page.bufferAddLineText(line_text, text_style)
+				page.bufferAddLineText(text, style)
 				current_page = self.chapters.getCurrentPage()
 				if page == current_page:
 					page.setFocusToLastLine()
+
+	#
+	# Timer functions.
+	#
+	def startTimer(self, callback, user_data=None, seconds=1):
+		return self.loop.set_alarm_in(seconds, _mainapp_call_timer_callback, user_data=(callback, user_data))
+
+
+	def cancelTimer(self, timer_handle):
+		return self.loop.remove_alarm(timer_handle)
 
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+import time
 import termapp
 
 
@@ -37,7 +38,9 @@ class MyTerminal(termapp.TermApp):
 		if key == "f6":
 			self.header.createNotifier(text="hello!!!!", seconds=2)
 		if key == "f7":
-			self.footer.setText("Goodbye, fellah!")
+			line_progress = termapp.LineProgress("Hello!")
+			self.currentPageAppendLine(line_progress)
+			self.startTimer(user_data=line_progress, callback=lambda user_data: user_data.setValue(88), seconds=4)
 		return True
 
 

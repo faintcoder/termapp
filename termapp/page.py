@@ -163,15 +163,23 @@ class Page(PageBase):
 			self._scroll_up(1, SCROLL_DOWN)
 
 
-	def bufferAddLineText(self, text, text_style = "normal_color"):
+	def bufferAddLineText(self, text, style = "normal_color"):
 		# Create a new urwid.Text widget, with the text
 		# we want to add.
-		new_text_line = LineText(text_style, text)
+		new_text_line = LineText(text=text, style=style)
 		# If we have more lines than we want it, let's cut it.
 		if self.maxLines > 0 and len(self.widgetLinesList) > self.maxLines:
 			del cur_page_text_list[0]
 		# Append the newly created widget object
 		self.widgetLinesList.append(new_text_line.widget)
+
+
+	def bufferAddLine(self, line):
+		# If we have more lines than we want it, let's cut it.
+		if self.maxLines > 0 and len(self.widgetLinesList) > self.maxLines:
+			del cur_page_text_list[0]
+		# Append the newly created widget object
+		self.widgetLinesList.append(line.widget)
 
 
 	def bufferClear(self):
