@@ -20,6 +20,8 @@ class TermApp(urwid.WidgetWrap):
 	def __init__(self, prompt_caption = DEFAULT_PROMPT_CAPTION, create_header = True, create_footer = True, create_header_divider = False):
 		# Public properties.
 		self.wheelScrollLines           = 1
+		self.showPageDescription        = True
+		self.pageDescriptionSeconds     = DEFAULT_PAGE_NOTIFIER_SECS
 		self.quitOnESC                  = False
 		self.logger                     = None
 		self.loop                       = None
@@ -83,9 +85,12 @@ class TermApp(urwid.WidgetWrap):
 				("fatal_color"            , "white"        , "light red"      ),
 				("dialog_banner"          , "white"        , "dark red"       ),
 				("dialog_background"      , "white"        , "dark gray"      ),
-				("dialog_buttons"         , "black"        , "yellow"         )
+				("dialog_buttons"         , "black"        , "yellow"         ),
+				("page_descriptor"        , "yellow"       , "dark gray"      )
     ]
-		self._shownDialog = False
+		# Private data
+		self._pageNotifier  = None
+		self._shownDialog   = False
 
 	#
 	# Urwid events callbacks.
@@ -178,6 +183,21 @@ class TermApp(urwid.WidgetWrap):
 	def onDialog(self, tag, result):
 		return True
 
+
+	def onPageChanged(self):
+		if self.showPageDescription:
+			current_page_string = self.chapters.getCurrentChapterString()
+			if not self._pageNotifier or self._pageNotifier.expired:
+				self._pageNotifier = self.header.createNotifier(
+					text=current_page_string,
+					seconds=self.pageDescriptionSeconds,
+					style="page_descriptor"
+				)
+			else:
+				self._pageNotifier.setText(current_page_string)
+				self._pageNotifier.autoDestroy(seconds=self.pageDescriptionSeconds)
+		return True
+
 	#
 	# Main functions.
 	#
@@ -252,28 +272,40 @@ class TermApp(urwid.WidgetWrap):
 	# Page function.
 	#
 	def switchToNextPage(self):
+		if self._shownDialog == True:
+			return 
 		result = self.chapters.currentChapter.switchToNextPage()
 		if result:
 			current_page = self.chapters.getCurrentPage()
 			self._w.body = current_page.widgetListBox
+		self.onPageChanged()
 
 
 	def switchToPrevPage(self):
+		if self._shownDialog == True:
+			return
 		result = self.chapters.currentChapter.switchToPrevPage()
 		if result:
 			current_page = self.chapters.getCurrentPage()
 			self._w.body = current_page.widgetListBox
+		self.onPageChanged()
 
 
 	def switchToNthPage(self, page_index):
+		if self._shownDialog == True:
+			return
 		result = self.chapters.currentChapter.switchToNthPage(page_index)
 		if result:
 			current_page = self.chapters.getCurrentPage()
 			self._w.body = current_page.widgetListBox
+		self.onPageChanged()
 
 
 	def switchToChapter(self, chapter_name):
+		if self._shownDialog == True:
+			return 
 		self.chapters.switchToChapter(chapter_name)
+		self.onPageChanged()
 
 	#
 	# Buffer functions.

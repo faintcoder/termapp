@@ -16,7 +16,6 @@ class Dialog():
 		# Body
 		body_text                = urwid.Text(("dialog_background", text), align="center")
 		body_filler              = urwid.Filler(body_text, valign = "top")
-		#body_decor               = urwid.AttrMap(body_filler, "dialog_background")
 		body_padding             = urwid.Padding(body_filler, left = 1, right = 1)
 		body_line_box            = urwid.LineBox(body_padding)
 		body                     = urwid.AttrMap(body_line_box, "dialog_background")

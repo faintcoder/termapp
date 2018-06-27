@@ -5,11 +5,11 @@ from .chapter          import Chapter
 
 class ChapterManager():
 
-	def __init__(self):
-		self.chapters = {}
-		self.mainChapterName = DEFAULT_MAIN_CHAPTER_NAME
-		self.chapters[self.mainChapterName] = Chapter(self.mainChapterName)
-		self.currentChapter = self.chapters[self.mainChapterName]
+	def __init__(self, main_chapter_name = DEFAULT_MAIN_CHAPTER_NAME):
+		self.chapters                        = {}
+		self.mainChapterName                 = main_chapter_name
+		self.chapters[main_chapter_name]     = Chapter(main_chapter_name)
+		self.currentChapter                  = self.chapters[main_chapter_name]
 
 
 	def createChapter(self, chapter_name):
@@ -42,5 +42,12 @@ class ChapterManager():
 		if chapter_name not in self.chapters:
 			return False
 		self.currentChapter = self.chapters[chapter_name]
+
+
+	def getCurrentChapterString(self):
+		current_string        = "Chapters: {}, Current: {}"
+		number_of_chapters    = str(len(self.chapters))
+		page_string           = self.currentChapter.getCurrentPageString()
+		return current_string.format(number_of_chapters, page_string)
 
 

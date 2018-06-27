@@ -63,3 +63,9 @@ class Chapter():
 		return True
 
 
+	def getCurrentPageString(self):
+		current_string = "{}/{} [{}]"
+		number_of_pages = str(len(self.pageList))
+		return current_string.format(self.name, self.currentPageIndex, number_of_pages)
+
+

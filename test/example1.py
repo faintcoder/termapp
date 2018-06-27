@@ -35,7 +35,9 @@ class MyTerminal(termapp.TermApp):
 		if key == "f5":
 			self.startDialog("Are you sure?", buttons=1)
 		if key == "f6":
-			self.cancelDialog()
+			self.header.createNotifier(text="hello!!!!", seconds=2)
+		if key == "f7":
+			self.footer.setText("Goodbye, fellah!")
 		return True
 
 
