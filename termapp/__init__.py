@@ -3,6 +3,7 @@ from .prompt              import Prompt
 from .line_base           import LineBase
 from .line_text           import LineText
 from .line_progress       import LineProgress
+from .line_completion     import LineCompletion
 from .page_base           import PageBase
 from .page                import Page
 from .header              import Header

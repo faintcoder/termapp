@@ -15,3 +15,9 @@ def _mainapp_call_timer_callback(_loop, _data):
 	callback(user_data)
 
 
+def _line_completion_flash_callback(_loop, _data):
+	_data._flashTimerHandle = None
+	_data._set_flash_on_off()
+	_data._activate_flash()
+
+

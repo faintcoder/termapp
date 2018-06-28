@@ -91,6 +91,10 @@ class TermApp(urwid.WidgetWrap):
 				("page_descriptor"        , "yellow"       , "dark gray"      ),
 				("completed_progressbar"  , "black"        , "light magenta"  ),
 				("uncompleted_progressbar", "white"        , "dark magenta"   ),
+				("compl_waiting_color"    , "black"        , "yellow"         ),
+				("compl_waiting_fl_color" , "white"        , "brown"          ),
+				("compl_error_color"      , "white"        , "dark red"       ),
+				("compl_success_color"    , "black"        , "light green"    ),
     ]
 		# Private data
 		self._pageNotifier  = None
