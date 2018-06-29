@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import urwid
-from .line_base        import LineBase
+from .line_base           import LineBase
 
 
 class LineText(LineBase):
@@ -8,13 +8,13 @@ class LineText(LineBase):
 	def __init__(self, text, full_line = True, style = "normal_color"):
 		super().__init__()
 		if full_line:
-			self.textWidget   = urwid.Text((style, text))
-			self.attrWidget   = urwid.AttrMap(self.textWidget, style)
-			self.widget       = self.attrWidget
+			self.textWidget     = urwid.Text((style, text))
+			self.attrWidget     = urwid.AttrMap(self.textWidget, style)
+			self.widget         = self.attrWidget
 		else:
-			self.textWidget   = urwid.Text((style, text))
-			self.widget       = self.textWidget
-			self.attrWidget   = None
+			self.textWidget     = urwid.Text((style, text))
+			self.widget         = self.textWidget
+			self.attrWidget     = None
 
 
 	def rows(self, visible_columns):

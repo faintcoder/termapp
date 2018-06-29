@@ -14,7 +14,9 @@ from .geometry            import Geometry
 from .chapter             import Chapter
 from .chapter_manager     import ChapterManager
 from .command_dispatcher  import CommandDispatcher
-from .dialog              import Dialog
+from .dialog_base         import DialogBase
+from .dialog_text         import DialogText
+from .dialog_user_pass    import DialogUserPass
 
 
 class TermApp(urwid.WidgetWrap):
@@ -48,12 +50,17 @@ class TermApp(urwid.WidgetWrap):
 		# Create the footer object.
 		self.footer                     = Footer(self.prompt.widget, create_text_footer=create_footer)
 		#Get the current page `urwid.ListBox` object.
-		self.body = self.chapters.getCurrentPage().widgetListBox
-		# Create the main application window, or the `urwid.Frame` object.
-		self._w = urwid.Frame(header=self.header.widget,
-                             body=self.body,
-                             footer=self.footer.widget,
-                             focus_part="footer")
+		self.body                       = self.chapters.getCurrentPage().widgetListBox
+		# Create the main application window, the `urwid.Frame` object,
+		# and assign it to the `urwid.WidgetWrap` internal `_w` variable,
+		# so we can receive keyboard/mouse events.
+		self.frame                      = urwid.Frame(
+																										header      = self.header.widget,
+																										body        = self.body,
+																										footer      = self.footer.widget,
+																										focus_part  = "footer"
+																								 )
+		self._w    = self.frame
 		# Get data to calculate urwid.Frame's body columns and rows,
 		# and store the results in a `Geometry` object.
 		# This is needed for the scrolling system.
@@ -97,20 +104,19 @@ class TermApp(urwid.WidgetWrap):
 				("compl_success_color"    , "black"        , "light green"    ),
     ]
 		# Private data
-		self._pageNotifier  = None
-		self._shownDialog   = False
+		self._pageNotifier     = None
+		self._currentDialog    = None
+		self._shownDialog      = False
 
 	#
 	# Urwid events callbacks.
 	#
 	def keypress(self, size, key):
-		if self._shownDialog == True:
-			if key in ("enter", "esc", "left", "right"):
-				super(TermApp, self).keypress(size, key)
-			else:
-				return
-			#self.header.setText("key pressed: %s" % (key,))
-			#return
+		# If a dialog is shown, send keyboard
+		# input exclusively to the dialog window.
+		if self._shownDialog:
+			self._currentDialog.keypress(size, key)
+			return
 		# Quit on ESC
 		if key is "esc":
 			if self.quitOnESC:
@@ -188,7 +194,7 @@ class TermApp(urwid.WidgetWrap):
 		return True
 
 
-	def onDialog(self, tag, result):
+	def onDialogResult(self, result):
 		return True
 
 
@@ -248,19 +254,30 @@ class TermApp(urwid.WidgetWrap):
 	#
 	# Dialog functions.
 	#
-	def startDialog(self, text, title="Warning!", buttons=2, button1_text="Ok", button2_text="Cancel"):
+	def startDialog(self, text, title="Warning!", buttons=2, button_captions = ["OK", "Cancel"]):
 		if self._shownDialog == True:
 			return
-		dialog = Dialog(
-				self, text=text,
-				title=title,
-				buttons=buttons,
-				button1_text=button1_text,
-				button2_text=button2_text
+		dialog = DialogText(
+				self,
+				text               = text,
+				title              = title,
+				buttons            = buttons,
+				button_captions    = button_captions
 			)
 		self._w.body = dialog.overlay
 		self._w.set_focus("body")
-		self._shownDialog = True
+		self._shownDialog      = True
+		self._currentDialog    = dialog
+
+
+	def startDialogUserPass(self):
+		if self._shownDialog == True:
+			return
+		dialog = DialogUserPass(self)
+		self._w.body = dialog.overlay
+		self._w.set_focus("body")
+		self._shownDialog      = True
+		self._currentDialog    = dialog
 
 
 	def cancelDialog(self):
@@ -268,7 +285,8 @@ class TermApp(urwid.WidgetWrap):
 			return
 		self._w.body = self.body
 		self._w.set_focus("footer")
-		self._shownDialog = False
+		self._shownDialog      = False
+		self._currentDialog    = None
 
 	#
 	# Palette functions

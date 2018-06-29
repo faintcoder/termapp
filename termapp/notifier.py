@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 import urwid
-from .common           import *
-from .timer_callbacks  import _notifier_remove_callback
+from .common              import *
+from .timer_callbacks     import _notifier_remove_callback
 
 
 class Notifier():
 
 	def __init__(self, loop, pile, text, style="notifier_color"):		
-		self.loop           = loop
-		self.pile           = pile
-		self.seconds        = None				
-		self.expired        = False
-		self.textWidget     = urwid.Text((style, text), wrap=urwid.CLIP)
-		self.widget         = urwid.AttrMap(self.textWidget, style)
+		self.loop             = loop
+		self.pile             = pile
+		self.seconds          = None				
+		self.expired          = False
+		self.textWidget       = urwid.Text((style, text), wrap=urwid.CLIP)
+		self.widget           = urwid.AttrMap(self.textWidget, style)
 		# Private data
-		self._timerHandle   = None
+		self._timerHandle     = None
 
 
 	def setText(self, text):
@@ -28,8 +28,8 @@ class Notifier():
 		if seconds > 0:
 			if self._timerHandle:
 				self.loop.remove_alarm(self._timerHandle)
-			self._timerHandle  = self.loop.set_alarm_in(seconds, _notifier_remove_callback, user_data=self)
-			self.seconds       = seconds
+			self._timerHandle   = self.loop.set_alarm_in(seconds, _notifier_remove_callback, user_data=self)
+			self.seconds        = seconds
 
 
 	def show(self):

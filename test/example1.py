@@ -17,8 +17,8 @@ class MyTerminal(termapp.TermApp):
 		self.printSuccess("echo:  " + params)
 
 
-	def onDialog(self, tag, result):
-		self.header.setText(result)
+	def onDialogResult(self, result):
+		self.header.setText(str(result))
 		return True
 
 
@@ -33,8 +33,10 @@ class MyTerminal(termapp.TermApp):
 		#	self.prompt.startFlashing(self.loop)
 		#if key == "f8":
 		#	self.prompt.stopFlashing()
+		if key == "f8":
+			self.startDialogUserPass()
 		if key == "f5":
-			self.startDialog("Are you sure?", buttons=1)
+			self.startDialog("Are you sure?", buttons=2)
 		if key == "f6":
 			self.header.createNotifier(text="hello!!!!", seconds=2)
 		if key == "f7":
@@ -45,7 +47,7 @@ class MyTerminal(termapp.TermApp):
 		if key == "f9":
 			line_copml = termapp.LineCompletion(self.loop, "Downloading stuff ...")
 			self.currentPageAppendLine(line_copml)
-			self.startTimer(user_data=line_copml, callback=lambda user_data: user_data.setError(), seconds=4)
+			self.startTimer(user_data=line_copml, callback=lambda user_data: user_data.setSuccess(), seconds=4)
 		return True
 
 

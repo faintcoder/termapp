@@ -12,7 +12,9 @@ from .geometry            import Geometry
 from .chapter             import Chapter
 from .chapter_manager     import ChapterManager
 from .command_dispatcher  import CommandDispatcher
-from .dialog              import Dialog
+from .dialog_base         import DialogBase
+from .dialog_text         import DialogText
+from .dialog_user_pass    import DialogUserPass
 from .termapp             import TermApp
 name="termapp"
 

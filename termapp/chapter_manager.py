@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-from .common           import *
-from .chapter          import Chapter
+from .common              import *
+from .chapter             import Chapter
 
 
 class ChapterManager():

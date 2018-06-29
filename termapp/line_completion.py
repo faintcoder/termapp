@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import urwid
-from .common           import *
-from .line_base        import LineBase
-from .timer_callbacks  import _line_completion_flash_callback
+from .common              import *
+from .line_base           import LineBase
+from .timer_callbacks     import _line_completion_flash_callback
 
 
 class LineCompletion(LineBase):

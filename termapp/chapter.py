@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-from .common           import *
-from termapp.page      import Page
+from .common              import *
+from termapp.page         import Page
 
 
 class Chapter():
 
 	def __init__(self, chapter_name):
-		self.pageList           = []
-		self.currentPage        = Page()
-		self.currentPageIndex   = 0
-		self.name               = chapter_name
+		self.pageList               = []
+		self.currentPage            = Page()
+		self.currentPageIndex       = 0
+		self.name                   = chapter_name
 		self.pageList.append(self.currentPage)
 
 

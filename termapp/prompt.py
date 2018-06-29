@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import urwid
 import collections
-from .common           import *
-from .timer_callbacks  import _prompt_flash_callback
+from .common              import *
+from .timer_callbacks     import _prompt_flash_callback
 
 
-class Prompt():
+class Prompt(urwid.WidgetWrap):
 
 	def __init__(self, prompt_caption = None):
 		self.saveCommandHistory         = True
@@ -17,7 +17,7 @@ class Prompt():
 		else:
 			self.promptCaption            = DEFAULT_PROMPT_CAPTION
 
-		self.widget = urwid.Edit(self.promptCaption, "", multiline=False)
+		self.widget                     = urwid.Edit(self.promptCaption, "", multiline=False)
 		self.loop                       = None
 
 		self._promptDefaultStyle        = "prompt_color6"
@@ -29,6 +29,7 @@ class Prompt():
 		self._autoCompleteWords         = []
 		self._promptFlashTimerHandle    = None
 		self._promptFlashActive         = False
+		self._w                         = self.widget
 
 	#
 	# Internal Functions.
