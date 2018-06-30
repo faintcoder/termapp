@@ -230,7 +230,7 @@ class TermApp(urwid.WidgetWrap):
 			self.header.loop = loop
 			self.footer.loop = loop
 			self.prompt.loop = loop
-			if self.onStart(loop):
+			if self.onStart():
 				return True
 		return False
 

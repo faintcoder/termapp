@@ -30,7 +30,7 @@ class DialogProgress(DialogBase):
 			buttons = 1
 			button_captions = ["Cancel"]
 		else:
-			butotns = 0
+			buttons = 0
 			button_captions = []
 		super().__init__(
 			main_application    = main_application,
