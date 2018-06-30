@@ -32,11 +32,11 @@ class LineProgress(LineBase):
 		self.captionStyle     = caption_style
 		# Create the progressbar.
 		self.progressWidget   = urwid.ProgressBar(
-														complete=completed_style,
-														normal=uncompleted_style,
-														current=initial_value,
-														done=max_value
-													)
+															complete  = completed_style,
+															normal    = uncompleted_style,
+															current   = initial_value,
+															done      = max_value
+													  )
 		# Add widgets to the list.
 		widget_list.append(self.captionWidget)
 		if progress_width > 0:

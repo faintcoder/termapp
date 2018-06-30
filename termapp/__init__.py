@@ -15,6 +15,7 @@ from .command_dispatcher  import CommandDispatcher
 from .dialog_base         import DialogBase
 from .dialog_text         import DialogText
 from .dialog_user_pass    import DialogUserPass
+from .dialog_progress     import DialogProgress
 from .termapp             import TermApp
 name="termapp"
 

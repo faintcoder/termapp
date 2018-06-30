@@ -15,13 +15,20 @@ from .chapter             import Chapter
 from .chapter_manager     import ChapterManager
 from .command_dispatcher  import CommandDispatcher
 from .dialog_base         import DialogBase
+from .dialog_progress     import DialogProgress
 from .dialog_text         import DialogText
 from .dialog_user_pass    import DialogUserPass
 
 
 class TermApp(urwid.WidgetWrap):
 
-	def __init__(self, prompt_caption = DEFAULT_PROMPT_CAPTION, create_header = True, create_footer = True, create_header_divider = False):
+	def __init__(
+		self,
+		prompt_caption                  = DEFAULT_PROMPT_CAPTION,
+		create_header                   = True,
+		create_footer                   = True,
+		create_header_divider           = False
+	):
 		# Public properties.
 		self.wheelScrollLines           = 1
 		self.showPageDescription        = True
@@ -60,7 +67,7 @@ class TermApp(urwid.WidgetWrap):
 																										footer      = self.footer.widget,
 																										focus_part  = "footer"
 																								 )
-		self._w    = self.frame
+		self._w = self.frame
 		# Get data to calculate urwid.Frame's body columns and rows,
 		# and store the results in a `Geometry` object.
 		# This is needed for the scrolling system.
@@ -254,7 +261,16 @@ class TermApp(urwid.WidgetWrap):
 	#
 	# Dialog functions.
 	#
-	def startDialog(self, text, title="Warning!", buttons=2, button_captions = ["OK", "Cancel"]):
+	def startDialog(self, dialog):
+		if self._shownDialog == True:
+			return
+		self._w.body = dialog.overlay
+		self._w.set_focus("body")
+		self._shownDialog      = True
+		self._currentDialog    = dialog
+
+
+	def startDialogText(self, text, title="Warning!", buttons=2, button_captions = ["OK", "Cancel"]):
 		if self._shownDialog == True:
 			return
 		dialog = DialogText(
@@ -264,20 +280,14 @@ class TermApp(urwid.WidgetWrap):
 				buttons            = buttons,
 				button_captions    = button_captions
 			)
-		self._w.body = dialog.overlay
-		self._w.set_focus("body")
-		self._shownDialog      = True
-		self._currentDialog    = dialog
+		self.startDialog(dialog)
 
 
 	def startDialogUserPass(self):
 		if self._shownDialog == True:
 			return
 		dialog = DialogUserPass(self)
-		self._w.body = dialog.overlay
-		self._w.set_focus("body")
-		self._shownDialog      = True
-		self._currentDialog    = dialog
+		self.startDialog(dialog)
 
 
 	def cancelDialog(self):

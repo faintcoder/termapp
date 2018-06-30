@@ -36,9 +36,12 @@ class MyTerminal(termapp.TermApp):
 		if key == "f8":
 			self.startDialogUserPass()
 		if key == "f5":
-			self.startDialog("Are you sure?", buttons=2)
+			self.startDialogText("Are you sure?", buttons=2)
 		if key == "f6":
-			self.header.createNotifier(text="hello!!!!", seconds=2)
+			#self.header.createNotifier(text="hello!!!!", seconds=2)
+			dialog = termapp.DialogProgress(self, initial_value=33, text="Downloading . . .", title="Download")
+			self.startDialog(dialog)
+			self.startTimer(user_data=dialog, callback=lambda user_data: user_data.setValue(89), seconds=4)
 		if key == "f7":
 			line_progress = termapp.LineProgress(self.loop, "f572d396fae9206628714fb2ce00f72e94f2258feee93389289s89", max_value=10000, initial_value=3344, display_value=True, progress_width=12, value_width=8)
 			self.currentPageAppendLine(line_progress)
