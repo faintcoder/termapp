@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+import time
 import termapp
 
 
@@ -10,12 +11,22 @@ class MyTerminal(termapp.TermApp):
 		# Register some example word completions
 		self.prompt.autocompletionAddWords(['hello', 'howareyou?'])
 		# Register some basic commands
+		self.commandDispatcher.registerCommand("print", self.delayedCommand, join_params=True)
 		self.commandDispatcher.registerCommand("echo", self.echo, join_params=True)
 		self.commandDispatcher.registerAlias("echo", "e")
 
 
 	def echo(self, params):
 		self.printSuccess("echo:  " + params)
+
+
+	def delayedCommand(self, params):
+		self.printSuccess("Hello!")
+		line_compl = termapp.LineCompletion(self.loop, "Downloading archives ...")
+		self.currentPageAppendLine(line_compl)
+		self.flush()
+		time.sleep(2)
+		line_compl.setSuccess()
 
 
 	def onDialogResult(self, result):
@@ -34,13 +45,13 @@ class MyTerminal(termapp.TermApp):
 			self.currentPageAppendLine(line_progress)
 			self.startTimer(user_data=line_progress, callback=lambda user_data: user_data.setValue(8896), seconds=4)
 		if key == "f8":
-			line_copml = termapp.LineCompletion(self.loop, "Downloading emails ...")
-			self.currentPageAppendLine(line_copml)
-			self.startTimer(user_data=line_copml, callback=lambda user_data: user_data.setError(), seconds=2)
+			line_compl = termapp.LineCompletion(self.loop, "Downloading emails ...")
+			self.currentPageAppendLine(line_compl)
+			self.startTimer(user_data=line_compl, callback=lambda user_data: user_data.setError(), seconds=2)
 		if key == "f9":
-			line_copml = termapp.LineCompletion(self.loop, "Downloading archives ...")
-			self.currentPageAppendLine(line_copml)
-			self.startTimer(user_data=line_copml, callback=lambda user_data: user_data.setSuccess(), seconds=2)
+			line_compl = termapp.LineCompletion(self.loop, "Downloading archives ...")
+			self.currentPageAppendLine(line_compl)
+			self.startTimer(user_data=line_compl, callback=lambda user_data: user_data.setSuccess(), seconds=2)
 		return True
 
 

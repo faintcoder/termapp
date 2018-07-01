@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import urwid
+from collections          import deque
 from .common              import *
+from .loop                import Loop
 from .timer_callbacks     import _mainapp_call_timer_callback
 from .prompt              import Prompt
 from .line_base           import LineBase
@@ -37,8 +39,10 @@ class TermApp(urwid.WidgetWrap):
 		self.logger                     = None
 		self.loop                       = None
 		self.screen                     = None
-		# Create the command dispatcher
+		# Create the command dispatcher.
 		self.commandDispatcher          = CommandDispatcher()
+		# Create the command queue.
+		self.commandDeque               = deque()
 		# Register basic commands.
 		self.commandDispatcher.registerCommand("quit", self.quit)
 		self.commandDispatcher.registerAlias("quit", "exit")
@@ -126,8 +130,9 @@ class TermApp(urwid.WidgetWrap):
 			return
 		# Quit on ESC
 		if key is "esc":
-			if self.quitOnESC:
-				self.quit()
+			#if self.quitOnESC: FIX THIS
+				#self.quit()
+			self.dequeueAndExecuteCommands()
 		# Tab completion
 		if key is "tab":
 			self.prompt.completeLastWord()
@@ -160,7 +165,7 @@ class TermApp(urwid.WidgetWrap):
 		if key not in ("up", "down"):
 			self.prompt.commandHistoryGoToBegin()
 		if self.onKeyPress(key):
-			super(TermApp, self).keypress(size, key)
+			super().keypress(size, key)
 
 
 	def mouse_event(self, size, event, button, col, row, focus):
@@ -190,14 +195,21 @@ class TermApp(urwid.WidgetWrap):
 
 
 	def onCommand(self, command, params):
-		result = self.commandDispatcher.dispatch(command, params)
-		if not result:
-			self.printErr("Unknown command `%s`." % (command))
-			return False
+		return True
+
+
+	def onCommandDispatcherError(self, command, params):
+		self.printErr("Unknown command `%s`." % (command))
 		return True
 
 
 	def onStart(self, loop):
+		return True
+
+
+	def onIdle(self):
+		self.dequeueAndExecuteCommands()
+		self.flush()
 		return True
 
 
@@ -224,7 +236,7 @@ class TermApp(urwid.WidgetWrap):
 	#
 	def start(self):
 		# Create the loop object.
-		loop = urwid.MainLoop(self, palette=self._palette, pop_ups=True)
+		loop = Loop(main_application=self, palette=self._palette)
 		if loop:
 			self.loop        = loop
 			self.header.loop = loop
@@ -245,18 +257,48 @@ class TermApp(urwid.WidgetWrap):
 		raise urwid.ExitMainLoop()
 
 
+	def flush(self):
+		self.loop.flush()
+
+
 	def sendCommand(self, command_text):
 		# If null text specified as a command, return False.
 		if len(command_text) == 0:
 			return False
+		# Save the command in the prompt history.
 		self.prompt.saveCommandInHistory(command_text)
+		# Call the `onText` callback, and if it returns
+		# true, we can process the command.
 		if self.onText(command_text):
+			# Split the command text to read command
+			# parameters.
 			params   = command_text.split(" ")
+			# The first string of the splitted command
+			# text is the command itself.
 			command  = params[0]
+			# To get the remaining parameters we remove
+			# the head from the list (the command).
 			params.pop(0)
-			if self.onCommand(command, params):
-				return True
-		return False
+			# Append a tuple of (command, params) to
+			# the queue that we will process after.
+			self.commandDeque.append((command, params))
+		return True
+
+
+	def dequeueAndExecuteCommands(self):
+		if len(self.commandDeque) == 0:
+			return False
+		while True:
+			# Dequeue command from the command queue.		
+			command, params = self.commandDeque.popleft()
+			# Then we pass command and parameters to
+			# the command dispatcher object.
+			result = self.commandDispatcher.dispatch(command, params)
+			if not result:
+				return self.onCommandDispatcherError(command, params)
+			if len(self.commandDeque) == 0:
+				break
+		return True
 
 	#
 	# Dialog functions.

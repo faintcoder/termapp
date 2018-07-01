@@ -80,6 +80,6 @@ class DialogBase(urwid.WidgetWrap):
 
 
 	def keypress(self, size, key):
-		return super(DialogBase, self).keypress(size, key)
+		return super().keypress(size, key)
 
 

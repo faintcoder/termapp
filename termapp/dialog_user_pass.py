@@ -48,6 +48,6 @@ class DialogUserPass(DialogBase):
 			if self.widget.get_focus() == "footer":
 				self.widget.set_focus("body")
 				self.pile.set_focus(1)
-		super(DialogUserPass, self).keypress(size, key)
+		super().keypress(size, key)
 
 

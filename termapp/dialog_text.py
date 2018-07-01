@@ -27,6 +27,6 @@ class DialogText(DialogBase):
 
 
 	def keypress(self, size, key):
-		super(DialogText, self).keypress(size, key)
+		super().keypress(size, key)
 
 
