@@ -1,32 +1,63 @@
 #!/usr/bin/env python3
 import sys
 import time
+import random
 import termapp
 
 
-class MyTerminal(termapp.TermApp):
+class TerminalLineExample(termapp.TermApp):
 	
 	def __init__(self):
 		super().__init__(create_header=True, create_footer=True)
 		# Register some example word completions
 		self.prompt.autocompletionAddWords(['hello', 'howareyou?'])
 		# Register some basic commands
-		self.commandDispatcher.registerCommand("print", self.delayedCommand, join_params=True)
-		self.commandDispatcher.registerCommand("echo", self.echo, join_params=True)
-		self.commandDispatcher.registerAlias("echo", "e")
+		command_list = []
+		command_list.append(termapp.CommandDescription(
+			name         = "print",
+			callback     = self.delayedCommand,
+			on_waiting   = self.delayedCommandWaiting,
+			deferred     = True
+		))
+		command_list.append(termapp.CommandDescription(
+			name         = "echo",
+			alias        = "e",
+			callback     = self.echo,
+			params_join  = True
+		))
+		self.commandDispatcher.registerCommandList(command_list)
 
 
-	def echo(self, params):
-		self.printSuccess("echo:  " + params)
+	def echo(self, command):
+		# This is an example of how 
+		self.printSuccess("echo:  " + command.params)
+		return True
 
 
-	def delayedCommand(self, params):
-		self.printSuccess("Hello!")
+	def delayedCommandWaiting(self, command):
+		# This waiting callback will be called from the main thread
+		# before executing a long command.
+		# This is helpful, so we can add a "waiting" line to the
+		# screen, and having that line report error or success
+		# when a long command finally asynchronously complete.
 		line_compl = termapp.LineCompletion(self.loop, "Downloading archives ...")
 		self.currentPageAppendLine(line_compl)
-		self.flush()
+		command.callbackSuccess = lambda user_data: line_compl.setSuccess()
+		command.callbackError   = lambda user_data: line_compl.setError()
+		return True
+
+
+	def delayedCommand(self, command):
+		# This is a long command that will take some seconds
+		# to execute. While this is busy, display is still
+		# responsive, because this command will be executed
+		# with the "deferred" flag set, so it will be executed
+		# by a secondary thread, and not the main thread.
+		# When the command is executed, we can set a success
+		# status [default], or an error status. 
 		time.sleep(2)
-		line_compl.setSuccess()
+		command.success = random.randint(0,1)
+		return True
 
 
 	def onDialogResult(self, result):
@@ -55,7 +86,7 @@ class MyTerminal(termapp.TermApp):
 		return True
 
 
-my_term = MyTerminal()
+my_term = TerminalLineExample()
 if my_term.start():
 	my_term.run()
 sys.exit(0)

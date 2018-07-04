@@ -1,0 +1,105 @@
+#!/bin/bash
+command_is_present() {
+	type "$1" > /dev/null 2>&1
+}
+
+package_is_present() {
+  dpkg-query -l "$@" > /dev/null 2>&1
+}
+
+print_out() {
+	echo -e "$@" >&1
+}
+
+print_err() {
+	echo -e "${0##*/}: ${COLOR_RED}error:${COLOR_RESET} $@" >&2
+}
+
+system_packages=( python3 python3-pip python3-venv )
+python_packages=( )
+python_packages_install_locally="1"
+
+###############
+## Functions ##
+###############
+
+install_package() {
+	local package_name="$1"
+	if [[ -z "${package_name}" ]]; then
+		return 1
+	fi
+	if ! package_is_present "${package_name}"; then
+		if command_is_present apt; then
+			if ! sudo apt install -y "${package_name}"; then
+				return 1	
+			fi
+		else
+			if ! sudo apt-get install -y "${package_name}"; then
+				return 1	
+			fi
+		fi
+	fi
+	return 0
+}
+
+install_all_packages() {
+	for package in "$@"
+	do
+		if install_package "${package}"; then
+			echo "package ${package} is present"
+		else
+			echo "unable to find or install ${package} package."
+			exit 1
+		fi
+	done
+}
+
+############
+## Script ##
+############
+
+if ! command_is_present sudo; then
+	print_err "program \`sudo\` not present"
+	exit 1
+fi
+#
+# Install all system packages.
+#
+install_all_packages "${system_packages[@]}"
+#
+# Install all python packages.
+#
+if [[ "${python_packages_local}" == 1 ]]; then
+	# Install python packages in a local virtual environment.	
+	if python3 -m venv venv && venv/bin/pip install "${python_packages[@]}"; then
+		echo "python package(s) installed: ${python_packages[@]}."
+	else
+		print_err "unable to install python package(s)"
+		exit 1
+	fi
+else
+	# Install python packages globally.
+	if sudo pip3 install "${python_packages[@]}"; then
+		echo "python package(s) installed: ${python_packages[@]}."
+	else
+		print_err "unable to install python package(s)"
+		exit 1
+	fi
+fi
+if sudo python3 -m pip install --user --upgrade setuptools wheel; then
+	echo "python setuptools, wheel installed."
+fi
+if pip3 install -e ./termapp; then
+	echo "python local package \`termapp\` successfully installed."
+fi
+
+#
+# Done.
+#
+echo " "
+echo " "
+echo "installed all needed packages."
+echo -e "\e[92mall needed packages are present!\e[0m"
+echo " "
+exit 0
+

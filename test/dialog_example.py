@@ -3,19 +3,25 @@ import sys
 import termapp
 
 
-class MyTerminal(termapp.TermApp):
+class TerminalDialogExample(termapp.TermApp):
 	
 	def __init__(self):
 		super().__init__(create_header=True, create_footer=True)
 		# Register some example word completions
 		self.prompt.autocompletionAddWords(['hello', 'howareyou?'])
 		# Register some basic commands
-		self.commandDispatcher.registerCommand("echo", self.echo, join_params=True)
-		self.commandDispatcher.registerAlias("echo", "e")
+		command_list = []
+		command_list.append(termapp.CommandDescription(
+			name         = "echo",
+			alias        = "e",
+			callback     = self.echo,
+			params_join  = True
+		))
+		self.commandDispatcher.registerCommandList(command_list)
 
 
-	def echo(self, params):
-		self.printSuccess("echo:  " + params)
+	def echo(self, command):
+		self.printSuccess("echo:  " + command.params)
 
 
 	def onDialogResult(self, result):
@@ -42,7 +48,7 @@ class MyTerminal(termapp.TermApp):
 		return True
 
 
-my_term = MyTerminal()
+my_term = TerminalDialogExample()
 if my_term.start():
 	my_term.run()
 sys.exit(0)

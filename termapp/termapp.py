@@ -15,6 +15,8 @@ from .footer              import Footer
 from .geometry            import Geometry
 from .chapter             import Chapter
 from .chapter_manager     import ChapterManager
+from .command             import Command
+from .command_description import CommandDescription
 from .command_dispatcher  import CommandDispatcher
 from .dialog_base         import DialogBase
 from .dialog_progress     import DialogProgress
@@ -40,13 +42,12 @@ class TermApp(urwid.WidgetWrap):
 		self.loop                       = None
 		self.screen                     = None
 		# Create the command dispatcher.
-		self.commandDispatcher          = CommandDispatcher()
+		self.commandDispatcher          = CommandDispatcher(self)
 		# Create the command queue.
 		self.commandDeque               = deque()
 		# Register basic commands.
-		self.commandDispatcher.registerCommand("quit", self.quit)
-		self.commandDispatcher.registerAlias("quit", "exit")
-		self.commandDispatcher.registerAlias("quit", "q")
+		quit_description                = CommandDescription(name="quit", callback=self.quit, alias="q", params_ignore=True)
+		self.commandDispatcher.registerCommand(quit_description)
 		# Create prompt object
 		self.prompt                     = Prompt(prompt_caption=prompt_caption)
 		# Create chapters and pages.
@@ -130,9 +131,8 @@ class TermApp(urwid.WidgetWrap):
 			return
 		# Quit on ESC
 		if key is "esc":
-			#if self.quitOnESC: FIX THIS
-				#self.quit()
-			self.dequeueAndExecuteCommands()
+			if self.quitOnESC:
+				self.quit()
 		# Tab completion
 		if key is "tab":
 			self.prompt.completeLastWord()
@@ -208,7 +208,10 @@ class TermApp(urwid.WidgetWrap):
 
 
 	def onIdle(self):
+		# Dequeue commands and execute them,
+		# within the `CommandDispatcher` object.
 		self.dequeueAndExecuteCommands()
+		# Flush screen.
 		self.flush()
 		return True
 
@@ -237,12 +240,23 @@ class TermApp(urwid.WidgetWrap):
 	def start(self):
 		# Create the loop object.
 		loop = Loop(main_application=self, palette=self._palette)
+		# Set the loop object to the objects which needs it.
 		if loop:
 			self.loop        = loop
 			self.header.loop = loop
 			self.footer.loop = loop
 			self.prompt.loop = loop
-			if self.onStart():
+		else:
+			return False
+		# Start CommandDispatcher object's stuff, like the
+		# secondary thread where to run deferred commands.
+		result = self.commandDispatcher.start()
+		if not result:
+			return False
+		# Now that we have started all the facilities,
+		# let's call user callback. If it will return
+		# true, system will start.
+		if self.onStart():
 				return True
 		return False
 
@@ -254,11 +268,17 @@ class TermApp(urwid.WidgetWrap):
 
 
 	def quit(self):
+		self.commandDispatcher.stop()
+		self.loop.clean()
 		raise urwid.ExitMainLoop()
 
 
 	def flush(self):
 		self.loop.flush()
+
+
+	def wakeup(self):
+		self.loop.wakeup()
 
 
 	def sendCommand(self, command_text):
@@ -286,9 +306,9 @@ class TermApp(urwid.WidgetWrap):
 
 
 	def dequeueAndExecuteCommands(self):
-		if len(self.commandDeque) == 0:
-			return False
 		while True:
+			if len(self.commandDeque) == 0:
+				break
 			# Dequeue command from the command queue.		
 			command, params = self.commandDeque.popleft()
 			# Then we pass command and parameters to
@@ -298,6 +318,11 @@ class TermApp(urwid.WidgetWrap):
 				return self.onCommandDispatcherError(command, params)
 			if len(self.commandDeque) == 0:
 				break
+		# If some deferred command, put some command to
+		# complete from the main thread, here is the
+		# place to do that.
+		self.commandDispatcher.completeEnqueuedCommands()
+		self.flush()
 		return True
 
 	#

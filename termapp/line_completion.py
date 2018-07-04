@@ -19,7 +19,7 @@ class LineCompletion(LineBase):
 		initial_status          = StatusWaiting,
 		initial_status_text     = "WAITING",
 		status_width            = 12,
-		waiting_flashing        = True,
+		waiting_flashing        = False,
 		flashing_seconds        = 0.5
 	):
 		super().__init__()
