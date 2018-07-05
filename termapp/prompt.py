@@ -10,7 +10,7 @@ class Prompt(urwid.WidgetWrap):
 	def __init__(self, prompt_caption = None):
 		self.saveCommandHistory         = True
 		self.tabCompletion              = True
-		self.promptFlashSeconds         = 0.25
+		self.flashSeconds               = 0.25
 		self.maxCommandHistory          = 0
 		if prompt_caption:
 			self.promptCaption            = prompt_caption
@@ -19,9 +19,8 @@ class Prompt(urwid.WidgetWrap):
 
 		self.widget                     = urwid.Edit(self.promptCaption, "", multiline=False)
 		self.loop                       = None
-
-		self._promptDefaultStyle        = "prompt_color6"
-		self._promptDefaultStyleFlash   = "prompt_color_flash6"
+		self.style                      = "prompt_color6"
+		self.styleFlash                 = "prompt_color_flash6"
 
 		self._commandLines              = collections.deque()
 		self._commandIndex              = -1
@@ -44,12 +43,12 @@ class Prompt(urwid.WidgetWrap):
 
 	def _prompt_flash_set_on(self):
 		prompt_text = self.widget.caption
-		self.widget.set_caption((self._promptDefaultStyleFlash, prompt_text))
+		self.widget.set_caption((self.styleFlash, prompt_text))
 
 
 	def _prompt_flash_set_off(self):
 		prompt_text = self.widget.caption
-		self.widget.set_caption((self._promptDefaultStyle, prompt_text))
+		self.widget.set_caption((self.style, prompt_text))
 
 
 	def _prompt_flash_continue_timer(self):
@@ -57,7 +56,7 @@ class Prompt(urwid.WidgetWrap):
 			current_handle = self._promptFlashTimerHandle
 			if current_handle:
 				self.loop.remove_alarm(current_handle)
-				new_handle = self.loop.set_alarm_in(self.promptFlashSeconds, _prompt_flash_callback, user_data=self)
+				new_handle = self.loop.set_alarm_in(self.flashSeconds, _prompt_flash_callback, user_data=self)
 				self._promptFlashTimerHandle = new_handle
 
 	#
@@ -128,7 +127,7 @@ class Prompt(urwid.WidgetWrap):
 			self.loop = loop			
 			self._promptFlashActive = True
 			self._prompt_flash_on_off()
-			new_handle = loop.set_alarm_in(self.promptFlashSeconds, _prompt_flash_callback, user_data=self)
+			new_handle = loop.set_alarm_in(self.flashSeconds, _prompt_flash_callback, user_data=self)
 			self._promptFlashTimerHandle = new_handle
 
 

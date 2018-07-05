@@ -7,6 +7,7 @@ class LineText(LineBase):
 
 	def __init__(self, text, full_line = True, style = "normal_color"):
 		super().__init__()
+		self.style            = style
 		if full_line:
 			self.textWidget     = urwid.Text((style, text))
 			self.attrWidget     = urwid.AttrMap(self.textWidget, style)

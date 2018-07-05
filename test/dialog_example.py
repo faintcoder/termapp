@@ -25,12 +25,12 @@ class TerminalDialogExample(termapp.TermApp):
 
 
 	def onDialogResult(self, result):
-		self.header.setText(str(result))
-		return True
+		self.print(str(result))
+		return super().onDialogResult(result)
 
 
 	def onStart(self):
-		self.print("Press F4, F5, F6, create example of dialogs")
+		self.print("Press F4, F5, F6, to create examples of dialogs")
 		return True
 
 

@@ -68,15 +68,15 @@ class Command():
 			callback_global_success   = self.commandDescription.callbackSuccess
 			callback_local_success    = self.callbackSuccess
 			if callback_local_success:
-				callback_local_success(self.userData)
+				callback_local_success(self)
 			elif callback_global_success:
-				callback_global_success(self.userData)
+				callback_global_success(self)
 		else:
 			callback_global_error     = self.commandDescription.callbackError
 			callback_local_error      = self.callbackError
 			if callback_local_error:
-				callback_local_error(self.userData)
+				callback_local_error(self)
 			elif callback_global_error:
-				callback_global_error(self.userData)
+				callback_global_error(self)
 
 

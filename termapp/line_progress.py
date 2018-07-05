@@ -11,7 +11,7 @@ class LineProgress(LineBase):
 		caption,
 		initial_value         = 0,
 		max_value             = 100,
-		caption_style         = "normal_color",
+		caption_style         = "highlight_color",
 		value_style           = "normal_color",
 		completed_style       = "completed_progressbar",
 		uncompleted_style     = "uncompleted_progressbar",

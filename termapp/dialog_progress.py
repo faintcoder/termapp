@@ -11,9 +11,9 @@ class DialogProgress(DialogBase):
 		main_application,
 		text               = "",
 		title              = "",
+		tag                = "tag",
 		initial_value      = 0,
 		max_value          = 100,
-		tag                = "progress",
 		completed_style    = "completed_progressbar",
 		uncompleted_style  = "uncompleted_progressbar",
 		cancelButton       = False,
@@ -34,8 +34,9 @@ class DialogProgress(DialogBase):
 			button_captions = []
 		super().__init__(
 			main_application    = main_application,
-			title               = title,
 			text                = text,
+			title               = title,
+			tag                 = tag,			
 			width               = 50,
 			height              = 8,
 			buttons             = buttons,

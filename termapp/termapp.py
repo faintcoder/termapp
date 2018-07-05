@@ -38,6 +38,7 @@ class TermApp(urwid.WidgetWrap):
 		self.showPageDescription        = True
 		self.pageDescriptionSeconds     = DEFAULT_PAGE_NOTIFIER_SECS
 		self.quitOnESC                  = False
+		self.quitDialogYesNo            = True
 		self.logger                     = None
 		self.loop                       = None
 		self.screen                     = None
@@ -99,6 +100,7 @@ class TermApp(urwid.WidgetWrap):
         ("header_color"           , "light gray"   , "dark blue"      ),
 				("footer_color"           , "white"        , "dark blue"      ),
         ("normal_color"           , "light gray"   , "black"          ),
+				("highlight_color"        , "white"        , "black"          ),
 				("error_color"            , "dark red"     , "black"          ),
 				("notifier_color"         , "black"        , "yellow"         ),
 				("warning_color"          , "yellow"       , "black"          ),
@@ -194,16 +196,16 @@ class TermApp(urwid.WidgetWrap):
 		return True
 
 
-	def onCommand(self, command, params):
-		return True
-
-
 	def onCommandDispatcherError(self, command, params):
-		self.printErr("Unknown command `%s`." % (command))
+		self.printErr("ERR: Unknown command: %s." % (command))
 		return True
 
 
-	def onStart(self, loop):
+	def onStart(self):
+		return True
+
+
+	def onExit(self):
 		return True
 
 
@@ -217,6 +219,12 @@ class TermApp(urwid.WidgetWrap):
 
 
 	def onDialogResult(self, result):
+		# Implementing the Yes/No dialog that asks the user
+		# to really quit or not.
+		if (self.quitDialogYesNo == True 
+				and result["tag"] == "_internal_quit_dialog"
+				and result["button_caption"] == "Yes"):
+			self.exit()
 		return True
 
 
@@ -268,9 +276,23 @@ class TermApp(urwid.WidgetWrap):
 
 
 	def quit(self):
+		if self.quitDialogYesNo:
+			self.startDialogText(
+				text             = "Are you sure to quit?",
+				title            = "Warning!",
+				tag              = "_internal_quit_dialog",
+				buttons          = 2,
+				button_captions  = ["Yes", "No"]
+			)
+		else:
+			self.exit()
+
+
+	def exit(self):
+		self.onExit()
 		self.commandDispatcher.stop()
 		self.loop.clean()
-		raise urwid.ExitMainLoop()
+		self.loop.exit()
 
 
 	def flush(self):
@@ -337,23 +359,31 @@ class TermApp(urwid.WidgetWrap):
 		self._currentDialog    = dialog
 
 
-	def startDialogText(self, text, title="Warning!", buttons=2, button_captions = ["OK", "Cancel"]):
+	def startDialogText(
+		self,
+		text,		
+		title            = "Warning!",
+		tag              = "tag",
+		buttons          = 2,
+		button_captions  = ["OK", "Cancel"]
+	):
 		if self._shownDialog == True:
 			return
 		dialog = DialogText(
 				self,
-				text               = text,
+				text               = text,				
 				title              = title,
+				tag                = tag,
 				buttons            = buttons,
 				button_captions    = button_captions
 			)
 		self.startDialog(dialog)
 
 
-	def startDialogUserPass(self):
+	def startDialogUserPass(self, tag = "tag"):
 		if self._shownDialog == True:
 			return
-		dialog = DialogUserPass(self)
+		dialog = DialogUserPass(self, tag=tag)
 		self.startDialog(dialog)
 
 

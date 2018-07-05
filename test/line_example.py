@@ -42,8 +42,8 @@ class TerminalLineExample(termapp.TermApp):
 		# when a long command finally asynchronously complete.
 		line_compl = termapp.LineCompletion(self.loop, "Downloading archives ...")
 		self.currentPageAppendLine(line_compl)
-		command.callbackSuccess = lambda user_data: line_compl.setSuccess()
-		command.callbackError   = lambda user_data: line_compl.setError()
+		command.callbackSuccess = lambda command: line_compl.setSuccess()
+		command.callbackError   = lambda command: line_compl.setError()
 		return True
 
 

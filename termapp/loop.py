@@ -35,6 +35,10 @@ class Loop(urwid.MainLoop):
 			self.pipefd = None
 
 
+	def exit(self):
+		raise urwid.ExitMainLoop()
+
+
 	def wakeup(self):
 		if not self.pipefd:
 			# Get a pipe write file descriptor.

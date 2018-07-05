@@ -9,16 +9,17 @@ class DialogUserPass(DialogBase):
 	def __init__(
 		self,
 		main_application,
-		tag    = "user_pass",
+		text   = "Enter username and password.",
 		title  = "Login",
-		text   = "Enter username and password."
+		tag    = "tag"
 	):
 		self.userWidget = urwid.Edit("User: ", "")
 		self.passWidget = urwid.Edit("Pass: ", "", mask="*")
 		super().__init__(
 			main_application    = main_application,
-			title               = title,
 			text                = text,
+			title               = title,
+			tag                 = tag,			
 			width               = 40,
 			height              = 15,
 			buttons             = 2,

@@ -11,7 +11,7 @@ class LineCompletion(LineBase):
 		self,
 		loop,
 		caption,
-		caption_style           = "normal_color",
+		caption_style           = "highlight_color",
 		waiting_style           = "compl_waiting_color",
 		waiting_flash_style     = "compl_waiting_fl_color",
 		error_style             = "compl_error_color",
