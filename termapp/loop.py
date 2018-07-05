@@ -25,6 +25,13 @@ class Loop(urwid.MainLoop):
 		self.draw_screen()
 
 
+	def init(self):
+		if not self.pipefd:
+			# Get a pipe write file descriptor.
+			self.pipefd = self.watch_pipe(self.onWakeup)
+		return True
+
+
 	def clean(self):
 		if self.pipefd:
 			# Remove the pipe fd from the main loop.
@@ -40,9 +47,6 @@ class Loop(urwid.MainLoop):
 
 
 	def wakeup(self):
-		if not self.pipefd:
-			# Get a pipe write file descriptor.
-			self.pipefd = self.watch_pipe(self.onWakeup)
 		# We can write to this file descriptor to
 		# wake up the main loop.
 		os.write(self.pipefd, b"wokeup")

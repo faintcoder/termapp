@@ -156,6 +156,8 @@ class CommandDispatcher():
 		# It means that it will call the "waiting"
 		# callback, if necessary.
 		command.start()
+		# Refresh screen
+		self.mainApplication.flush()
 		if command_description.deferred == False:
 			# If the command hasn't `deferred` flag set,
 			# it means that we can execute it from here,
@@ -166,6 +168,8 @@ class CommandDispatcher():
 			# It means that "on success" or "on error"
 			# callbacks will be called.
 			command.complete()
+			# Refresh screen
+			self.mainApplication.flush()
 		else:
 			# If, otherwise, the command has `deferred` flag
 			# set, we have to execute it from a secondary

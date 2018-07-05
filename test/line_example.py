@@ -30,7 +30,7 @@ class TerminalLineExample(termapp.TermApp):
 
 	def echo(self, command):
 		# This is an example of how 
-		self.printSuccess("echo:  " + command.params)
+		self.print("echo:  " + command.params)
 		return True
 
 
@@ -57,11 +57,6 @@ class TerminalLineExample(termapp.TermApp):
 		# status [default], or an error status. 
 		time.sleep(2)
 		command.success = random.randint(0,1)
-		return True
-
-
-	def onDialogResult(self, result):
-		self.header.setText(str(result))
 		return True
 
 

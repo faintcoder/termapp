@@ -39,6 +39,7 @@ class TermApp(urwid.WidgetWrap):
 		self.pageDescriptionSeconds     = DEFAULT_PAGE_NOTIFIER_SECS
 		self.quitOnESC                  = False
 		self.quitDialogYesNo            = True
+		self.commandSplitter            = ";"
 		self.logger                     = None
 		self.loop                       = None
 		self.screen                     = None
@@ -127,7 +128,7 @@ class TermApp(urwid.WidgetWrap):
 	#
 	def keypress(self, size, key):
 		# If a dialog is shown, send keyboard
-		# input exclusively to the dialog window.
+		# input only to the dialog window.
 		if self._shownDialog:
 			self._currentDialog.keypress(size, key)
 			return
@@ -213,7 +214,7 @@ class TermApp(urwid.WidgetWrap):
 		# Dequeue commands and execute them,
 		# within the `CommandDispatcher` object.
 		self.dequeueAndExecuteCommands()
-		# Flush screen.
+		# Refresh screen.
 		self.flush()
 		return True
 
@@ -250,6 +251,8 @@ class TermApp(urwid.WidgetWrap):
 		loop = Loop(main_application=self, palette=self._palette)
 		# Set the loop object to the objects which needs it.
 		if loop:
+			if not loop.init():
+				return False
 			self.loop        = loop
 			self.header.loop = loop
 			self.footer.loop = loop
@@ -307,39 +310,58 @@ class TermApp(urwid.WidgetWrap):
 		# If null text specified as a command, return False.
 		if len(command_text) == 0:
 			return False
+		# Create the final list of commands.
+		command_list = []
 		# Save the command in the prompt history.
-		self.prompt.saveCommandInHistory(command_text)
-		# Call the `onText` callback, and if it returns
-		# true, we can process the command.
-		if self.onText(command_text):
-			# Split the command text to read command
-			# parameters.
-			params   = command_text.split(" ")
-			# The first string of the splitted command
-			# text is the command itself.
-			command  = params[0]
-			# To get the remaining parameters we remove
-			# the head from the list (the command).
-			params.pop(0)
-			# Append a tuple of (command, params) to
-			# the queue that we will process after.
-			self.commandDeque.append((command, params))
+		self.prompt.saveCommandInHistory(command_text)		
+		# First of all, split the command line into ';'
+		# tokens, so we can specify multiple commands
+		# into a single line.
+		if len(self.commandSplitter) != 1 or self.commandSplitter == " ":
+			splitter = ";"
+		else:
+			splitter = self.commandSplitter
+		command_text = command_text.split(splitter)
+		# Add splitted commands to the final list.
+		for command_unit in command_text:
+			if command_unit == "":
+				continue
+			command_unit = command_unit.strip()
+			command_list.append(command_unit)
+		# Then, for each command specified, let's have
+		# command,params and enqueue that tuple into the
+		# "commands to process" deque.
+		for command_unit in command_list:
+			# Call the `onText` callback, and if it returns
+			# true, we can process the command.
+			if self.onText(command_unit):
+				# Split the command text to read command
+				# parameters.
+				params   = command_unit.split(" ")
+				# The first string of the splitted command
+				# text is the command itself.
+				command  = params[0]
+				# To get the remaining parameters we remove
+				# the head from the list (the command).
+				params.pop(0)
+				# Append a tuple of (command, params) to
+				# the queue that we will process after.
+				self.commandDeque.append((command, params))
 		return True
 
 
 	def dequeueAndExecuteCommands(self):
-		while True:
-			if len(self.commandDeque) == 0:
-				break
+		while len(self.commandDeque) > 0:
 			# Dequeue command from the command queue.		
 			command, params = self.commandDeque.popleft()
+			# Ignore empty strings
+			if command == "" or command == " ":
+				continue
 			# Then we pass command and parameters to
 			# the command dispatcher object.
 			result = self.commandDispatcher.dispatch(command, params)
 			if not result:
-				return self.onCommandDispatcherError(command, params)
-			if len(self.commandDeque) == 0:
-				break
+				self.onCommandDispatcherError(command, params)
 		# If some deferred command, put some command to
 		# complete from the main thread, here is the
 		# place to do that.
