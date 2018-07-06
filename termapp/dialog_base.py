@@ -2,6 +2,7 @@
 import urwid
 from .common              import *
 from .overlay_event       import OverlayEvent
+from .task_dialog         import TaskDialog
 
 
 class DialogBase(urwid.WidgetWrap):
@@ -20,8 +21,14 @@ class DialogBase(urwid.WidgetWrap):
 		height              = 15,
 		focus               = "footer"
 	):
+		# This is the dialog cancel switch.
+		# If this will be set to True, dialog
+		# will cancel, after reporting result.
+		self.cancel              = True
+		# Dialog tag.
+		self.tag                 = tag
 		# Create dialog result dictionary.
-		self.result              = { "tag": tag }
+		self.result              = { }
 		# Save main app instance
 		self.mainApplication     = main_application
 		# Header
@@ -74,9 +81,11 @@ class DialogBase(urwid.WidgetWrap):
 		button_caption                 = button_tuple[1]
 		self.result["button_id"]       = button_id
 		self.result["button_caption"]  = button_caption
-		cancel_dialog = self.mainApplication.onDialogResult(self.result)
-		if cancel_dialog:
-			self.mainApplication.cancelDialog()
+		task = TaskDialog(
+			main_application  = self.mainApplication,
+			dialog            = self
+		)
+		self.mainApplication.enqueueTask(task)
 
 
 	def keypress(self, size, key):

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import urwid
-from collections          import deque
 from .common              import *
 from .loop                import Loop
 from .timer_callbacks     import _mainapp_call_timer_callback
@@ -22,6 +21,10 @@ from .dialog_base         import DialogBase
 from .dialog_progress     import DialogProgress
 from .dialog_text         import DialogText
 from .dialog_user_pass    import DialogUserPass
+from .worker_queue        import WorkerQueue
+from .task_command        import TaskCommand
+from .task_dialog         import TaskDialog
+from .task_misc           import TaskExit
 
 
 class TermApp(urwid.WidgetWrap):
@@ -43,10 +46,10 @@ class TermApp(urwid.WidgetWrap):
 		self.logger                     = None
 		self.loop                       = None
 		self.screen                     = None
+		# Main application task queue.
+		self.taskQueue                  = WorkerQueue()
 		# Create the command dispatcher.
 		self.commandDispatcher          = CommandDispatcher(self)
-		# Create the command queue.
-		self.commandDeque               = deque()
 		# Register basic commands.
 		quit_description                = CommandDescription(name="quit", callback=self.quit, alias="q", params_ignore=True)
 		self.commandDispatcher.registerCommand(quit_description)
@@ -197,7 +200,7 @@ class TermApp(urwid.WidgetWrap):
 		return True
 
 
-	def onCommandDispatcherError(self, command, params):
+	def onCommandError(self, command, params):
 		self.printErr("ERR: Unknown command: %s." % (command))
 		return True
 
@@ -211,21 +214,28 @@ class TermApp(urwid.WidgetWrap):
 
 
 	def onIdle(self):
-		# Dequeue commands and execute them,
-		# within the `CommandDispatcher` object.
-		self.dequeueAndExecuteCommands()
-		# Refresh screen.
-		self.flush()
+		# Execute all pending `Task` objects.
+		self.processTasks()
 		return True
 
 
-	def onDialogResult(self, result):
+	def onTask(self, task):
+		# Execute `Task` object.
+		if not task.cancel:
+			task.execute()
+			# Refresh screen.
+			self.flush()
+		return True
+
+
+	def onDialogResult(self, dialog):
+		must_exit = False
 		# Implementing the Yes/No dialog that asks the user
 		# to really quit or not.
 		if (self.quitDialogYesNo == True 
-				and result["tag"] == "_internal_quit_dialog"
-				and result["button_caption"] == "Yes"):
-			self.exit()
+				and dialog.tag == "_internal_quit_dialog"
+				and dialog.result["button_caption"] == "Yes"):
+			self.enqueueTask(TaskExit(main_application=self))
 		return True
 
 
@@ -282,20 +292,21 @@ class TermApp(urwid.WidgetWrap):
 		if self.quitDialogYesNo:
 			self.startDialogText(
 				text             = "Are you sure to quit?",
-				title            = "Warning!",
+				title            = "Quit?",
 				tag              = "_internal_quit_dialog",
 				buttons          = 2,
-				button_captions  = ["Yes", "No"]
+				button_captions  = ["No", "Yes"]
 			)
 		else:
 			self.exit()
 
 
 	def exit(self):
+		#if self._shownDialog == True:
+			#self.cancelDialog()
 		self.onExit()
 		self.commandDispatcher.stop()
-		self.loop.clean()
-		self.loop.exit()
+		self.loop.gracefulExit()
 
 
 	def flush(self):
@@ -344,29 +355,33 @@ class TermApp(urwid.WidgetWrap):
 				# To get the remaining parameters we remove
 				# the head from the list (the command).
 				params.pop(0)
-				# Append a tuple of (command, params) to
-				# the queue that we will process after.
-				self.commandDeque.append((command, params))
+				# Create and append a `Task` object to the
+				# main application task queue, to process and 
+				# execute the user typed command.
+				task = TaskCommand(
+					main_application  = self,
+					command_name      = command,
+					params            = params
+				)
+				self.enqueueTask(task)
+		return True
+
+	#
+	# Task Functions.
+	#
+	def enqueueTask(self, task):
+		self.taskQueue.enqueueTask(task)
 		return True
 
 
-	def dequeueAndExecuteCommands(self):
-		while len(self.commandDeque) > 0:
-			# Dequeue command from the command queue.		
-			command, params = self.commandDeque.popleft()
-			# Ignore empty strings
-			if command == "" or command == " ":
-				continue
-			# Then we pass command and parameters to
-			# the command dispatcher object.
-			result = self.commandDispatcher.dispatch(command, params)
-			if not result:
-				self.onCommandDispatcherError(command, params)
-		# If some deferred command, put some command to
-		# complete from the main thread, here is the
-		# place to do that.
-		self.commandDispatcher.completeEnqueuedCommands()
-		self.flush()
+	def enqueueTaskAndWakeup(self, task):
+		self.enqueueTask(task)
+		self.wakeup()
+		return True
+
+
+	def processTasks(self):
+		self.taskQueue.completeTasks(callback=self.onTask)
 		return True
 
 	#

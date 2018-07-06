@@ -19,6 +19,9 @@ from .dialog_text         import DialogText
 from .dialog_user_pass    import DialogUserPass
 from .dialog_progress     import DialogProgress
 from .worker_queue        import WorkerQueue
+from .task_base           import TaskBase
+from .task_command        import TaskCommand
+from .task_dialog         import TaskDialog
 from .termapp             import TermApp
 name="termapp"
 

@@ -32,7 +32,7 @@ class Loop(urwid.MainLoop):
 		return True
 
 
-	def clean(self):
+	def gracefulExit(self):
 		if self.pipefd:
 			# Remove the pipe fd from the main loop.
 			self.remove_watch_pipe(self.pipefd)
@@ -40,6 +40,7 @@ class Loop(urwid.MainLoop):
 			# pipe file descriptor.
 			os.close(self.pipefd)
 			self.pipefd = None
+		self.exit()
 
 
 	def exit(self):

@@ -9,17 +9,23 @@ class WorkerQueue():
 		self.active  = True
 
 
-	def run(self):
+	def run(self, callback = None):
 		while self.active:
 			task = self.queue.get()
-			self.onTask(task)
+			if callback:
+				callback(task)
+			else:
+				self.onTask(task)
 			self.queue.task_done()
 
 
-	def completeTasks(self):
+	def completeTasks(self, callback = None):
 		while not self.queue.empty():
 			task = self.queue.get()
-			self.onTask(task)
+			if callback:
+				callback(task)
+			else:
+				self.onTask(task)
 			self.queue.task_done()
 
 

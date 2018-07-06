@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from .command             import Command
 from .worker_queue        import WorkerQueue
+from .task_command        import TaskCommandCompleter
 from threading            import Thread
 import sys
 
@@ -22,6 +23,7 @@ class _CommandExecutor(WorkerQueue):
 
 
 	def onTask(self, task):
+		# NOTE: Here `task` is a `Command` object.
 		# If the `Command` object is `None`, it means that it is the
 		# "kill pill", and that this thread must exit.
 		if task == None:
@@ -36,28 +38,13 @@ class _CommandExecutor(WorkerQueue):
 			command.complete()
 		else:
 			# If we have to complete the command from the main thread,
-			# we will insert the `Command` object to the main queue of
-			# the `CommandDispatcher` object, and we will wakeup the main
-			# thread.
-			self.commandDispatcher.enqueueCommandToComplete(command)
-			# Wakeup the main thread.
-			# We must wake up the main thread to make it process pending
-			# stuff, like this one.
-			self.commandDispatcher.mainApplication.wakeup()
-
-
-class _CommandCompleter(WorkerQueue):
-
-	def __init__(self, command_dispatcher):
-		super().__init__()
-		self.commandDispatcher = command_dispatcher
-
-
-	def onTask(self, task):
-		# Here `Task` object are `CommandResult` objects, so we
-		# have just to complete them.
-		command = task
-		command.complete()
+			# we will enqueue a new `TaskCommandCompleter` object to the
+			# main application.
+			task = TaskCommandCompleter(
+				main_application  = self.commandDispatcher.mainApplication,
+				command           = command
+			)
+			self.commandDispatcher.mainApplication.enqueueTaskAndWakeup(task)
 
 
 class CommandDispatcher():
@@ -66,13 +53,11 @@ class CommandDispatcher():
 		self.mainApplication      =  main_application
 		self.commands             =  {}
 		self.commandExecutor      = _CommandExecutor(self)
-		self.commandCompleter     = _CommandCompleter(self)
 
 
 	def start(self):
 		# Initialize the queues.
 		self.commandExecutor.start()
-		self.commandCompleter.start()
 		# Start the secondary thread that
 		# will execute deferred commands.
 		self._secondaryThread = Thread(target=self.commandExecutor.run)
@@ -130,14 +115,6 @@ class CommandDispatcher():
 		if command_name in self.commands:
 			return True
 		return False
-
-
-	def enqueueCommandToComplete(self, command):
-		self.commandCompleter.enqueueTask(command)
-
-
-	def completeEnqueuedCommands(self):
-		self.commandCompleter.completeTasks()
 
 
 	def dispatch(self, command_name, params):

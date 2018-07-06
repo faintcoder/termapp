@@ -65,6 +65,13 @@ class TerminalLineExample(termapp.TermApp):
 		return True
 
 
+	def onExit(self):
+		self.print("Goodbye!")
+		self.flush()
+		time.sleep(1)
+		return True
+
+
 	def onKeyPress(self, key):
 		if key == "f7":
 			line_progress = termapp.LineProgress(self.loop, "f572d396fae9206628714fb2ce00f72e94f2258f", max_value=10000, initial_value=3344, display_value=True, progress_width=12, value_width=8)
