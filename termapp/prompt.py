@@ -2,62 +2,65 @@
 import urwid
 import collections
 from .common              import *
-from .timer_callbacks     import _prompt_flash_callback
+from .timer_entry         import TimerEntry
 
 
 class Prompt(urwid.WidgetWrap):
 
-	def __init__(self, prompt_caption = None):
+	def __init__(self, prompt_caption = None, flash_seconds = 1, prompt_text = ""):
 		self.saveCommandHistory         = True
 		self.tabCompletion              = True
-		self.flashSeconds               = 0.25
 		self.maxCommandHistory          = 0
 		if prompt_caption:
 			self.promptCaption            = prompt_caption
 		else:
 			self.promptCaption            = DEFAULT_PROMPT_CAPTION
-
-		self.widget                     = urwid.Edit(self.promptCaption, "", multiline=False)
+		self.widget                     = urwid.Edit(self.promptCaption, prompt_text, multiline=False)
 		self.loop                       = None
 		self.style                      = "prompt_color6"
 		self.styleFlash                 = "prompt_color_flash6"
-
+		self.flashTimerEntry            = TimerEntry(seconds=flash_seconds, callback=self.onTimer)
+		# Private data
 		self._commandLines              = collections.deque()
 		self._commandIndex              = -1
-
 		self._autoCompleteWords         = []
-		self._promptFlashTimerHandle    = None
-		self._promptFlashActive         = False
 		self._w                         = self.widget
+		# Set caption style.
+		self.widget.set_caption((self.style, self.promptCaption))
 
 	#
-	# Internal Functions.
+	# Callback Functions.
 	#
-	def _prompt_flash_on_off(self):
-		self._promptFlashActive  = not self._promptFlashActive
-		if self._promptFlashActive:
-			self._prompt_flash_set_on()
+	def onTimer(self, timer_entry):
+		prompt_caption = self.widget.caption
+		if timer_entry.on:
+			self.widget.set_caption((self.styleFlash, prompt_caption))
 		else:
-			self._prompt_flash_set_off()
+			self.widget.set_caption((self.style, prompt_caption))
+		return True
+
+	#
+	# Flashing Functions.
+	#
+	def startFlashing(self):
+		if not self.loop:
+			return False
+		return self.loop.startTimerEntry(self.flashTimerEntry)
 
 
-	def _prompt_flash_set_on(self):
-		prompt_text = self.widget.caption
-		self.widget.set_caption((self.styleFlash, prompt_text))
+	def stopFlashing(self):
+		if not self.loop:
+			return False
+		# Cancel flashing timer.
+		result = self.loop.cancelTimer(self.flashTimerEntry)
+		# Set normal prompt caption style.
+		prompt_caption = self.widget.caption
+		self.widget.set_caption((self.style, prompt_caption))
+		return result
 
 
-	def _prompt_flash_set_off(self):
-		prompt_text = self.widget.caption
-		self.widget.set_caption((self.style, prompt_text))
-
-
-	def _prompt_flash_continue_timer(self):
-		if self.loop:
-			current_handle = self._promptFlashTimerHandle
-			if current_handle:
-				self.loop.remove_alarm(current_handle)
-				new_handle = self.loop.set_alarm_in(self.flashSeconds, _prompt_flash_callback, user_data=self)
-				self._promptFlashTimerHandle = new_handle
+	def isFlashing(self):
+		return self.flashTimerEntry.isActive()
 
 	#
 	# Text Functions.
@@ -118,25 +121,6 @@ class Prompt(urwid.WidgetWrap):
 	def setCaptionStyle(self, palette_entry_name):
 		caption = self.widget.caption
 		self.widget.set_caption((palette_entry_name, caption))
-
-	#
-	# Flash Functions.
-	#
-	def startFlashing(self, loop):
-		if loop and not self._promptFlashTimerHandle:
-			self.loop = loop			
-			self._promptFlashActive = True
-			self._prompt_flash_on_off()
-			new_handle = loop.set_alarm_in(self.flashSeconds, _prompt_flash_callback, user_data=self)
-			self._promptFlashTimerHandle = new_handle
-
-
-	def stopFlashing(self):
-		if self.loop and self._promptFlashTimerHandle:
-			self.loop.remove_alarm(self._promptFlashTimerHandle)
-			self._promptFlashTimerHandle = None
-			self._promptFlashActive = False
-			self._prompt_flash_set_off()
 
 	#
 	# Auto-completion functions.

@@ -56,7 +56,7 @@ class Header():
 		# Check if we have start a self-destruction timer
 		# for the Notifier object.
 		if seconds > 0:
-			notifier.autoDestroy(seconds)
+			notifier.removeInSeconds(seconds)
 		# Return the notifier to the user.
 		return notifier
 

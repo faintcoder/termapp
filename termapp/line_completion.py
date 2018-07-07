@@ -2,7 +2,7 @@
 import urwid
 from .common              import *
 from .line_base           import LineBase
-from .timer_callbacks     import _line_completion_flash_callback
+from .timer_entry         import TimerEntry
 
 
 class LineCompletion(LineBase):
@@ -19,8 +19,8 @@ class LineCompletion(LineBase):
 		initial_status          = StatusWaiting,
 		initial_status_text     = "WAITING",
 		status_width            = 12,
-		waiting_flashing        = False,
-		flashing_seconds        = 0.5
+		flash_waiting           = False,
+		flash_seconds           = 0.66
 	):
 		super().__init__()
 		# Create the caption text.
@@ -50,40 +50,42 @@ class LineCompletion(LineBase):
 		widget_list.append((status_width, self.attrWidget))
 		self.widget             = urwid.Columns(widget_list, dividechars=1, min_width=20)
 		# Set up flashing, if necessary.
-		self._flashActive       = False
-		self._flashSecs         = flashing_seconds
-		self._flashTimerHandle  = None
-		if waiting_flashing    == True:
-			self._activate_flash()
+		self.flashTimerEntry    = TimerEntry(seconds=flash_seconds, callback=self.onTimer)
+		if flash_waiting       == True:
+			self.startFlashing()
 
-
-	def _activate_flash(self):
-		if not self._flashTimerHandle:
-			self._flashTimerHandle = self.loop.set_alarm_in(self._flashSecs, _line_completion_flash_callback, user_data=self)
-
-
-	def _stop_flash(self):
-		if self._flashTimerHandle:
-			self.loop.remove_alarm(self._flashTimerHandle)
-			self._flashTimerHandle = None
-			self._flashActive      = False
-
-
-	def _set_flash_on_off(self):
-		self._flashActive = not self._flashActive
+	#
+	# Callbacks Functions.
+	#
+	def onTimer(self, timer_entry):
 		waiting_text = self.statusWidget.get_text()
-		if self._flashActive:
+		if timer_entry.on:
 			self.statusWidget.set_text((self.waitingFlashStyle, waiting_text[0]))
 			self.attrWidget.set_attr_map({ None : self.waitingFlashStyle })
 		else:
 			self.statusWidget.set_text((self.waitingStyle, waiting_text[0]))
 			self.attrWidget.set_attr_map({ None : self.waitingStyle })
+		return True
 
-
+	#
+	# Inherited Functions.
+	#
 	def rows(self, visible_columns):
 		return self.widget.rows((visible_columns,))
 
+	#
+	# Flashing Functions.
+	#
+	def startFlashing(self):
+		return self.loop.startTimerEntry(self.flashTimerEntry)
 
+
+	def stopFlashing(self):
+		return self.loop.cancelTimer(self.flashTimerEntry)
+
+	#
+	# Main Functions.
+	#
 	def setText(self, text):
 		self.captionWidget.set_text((self.captionStyle, text))
 
@@ -94,13 +96,15 @@ class LineCompletion(LineBase):
 
 
 	def setError(self, text = "ERROR"):
-		self._stop_flash()
+		if self.flashTimerEntry.isActive():
+			self.stopFlashing()
 		self.statusWidget.set_text((self.errorStyle, text))
 		self.attrWidget.set_attr_map({ None : self.errorStyle })
 
 
 	def setSuccess(self, text = "SUCCESS"):
-		self._stop_flash()
+		if self.flashTimerEntry.isActive():
+			self.stopFlashing()
 		self.statusWidget.set_text((self.successStyle, text))
 		self.attrWidget.set_attr_map({ None : self.successStyle })
 

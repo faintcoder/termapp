@@ -22,6 +22,8 @@ from .worker_queue        import WorkerQueue
 from .task_base           import TaskBase
 from .task_command        import TaskCommand
 from .task_dialog         import TaskDialog
+from .task_misc           import TaskExit
+from .timer_entry         import TimerEntry
 from .termapp             import TermApp
 name="termapp"
 

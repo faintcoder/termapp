@@ -2,7 +2,6 @@
 import urwid
 from .common              import *
 from .loop                import Loop
-from .timer_callbacks     import _mainapp_call_timer_callback
 from .prompt              import Prompt
 from .line_base           import LineBase
 from .line_text           import LineText
@@ -25,6 +24,7 @@ from .worker_queue        import WorkerQueue
 from .task_command        import TaskCommand
 from .task_dialog         import TaskDialog
 from .task_misc           import TaskExit
+from .timer_entry         import TimerEntry
 
 
 class TermApp(urwid.WidgetWrap):
@@ -228,6 +228,10 @@ class TermApp(urwid.WidgetWrap):
 		return True
 
 
+	def onDataArrival(self):
+		return True
+
+
 	def onDialogResult(self, dialog):
 		must_exit = False
 		# Implementing the Yes/No dialog that asks the user
@@ -254,7 +258,7 @@ class TermApp(urwid.WidgetWrap):
 		return True
 
 	#
-	# Main functions.
+	# Main Functions.
 	#
 	def start(self):
 		# Create the loop object.
@@ -302,10 +306,16 @@ class TermApp(urwid.WidgetWrap):
 
 
 	def exit(self):
-		#if self._shownDialog == True:
-			#self.cancelDialog()
+		# Stop prompt from flashing, if necessary.
+		if self.prompt.isFlashing():
+			self.prompt.stopFlashing()
+		# Call the `onExit` callback.
 		self.onExit()
+		# Stop the `CommandDispatcher` secondary
+		# thread.
 		self.commandDispatcher.stop()
+		# Let the `Loop` object to do a graceful
+		# exit.
 		self.loop.gracefulExit()
 
 
@@ -385,7 +395,7 @@ class TermApp(urwid.WidgetWrap):
 		return True
 
 	#
-	# Dialog functions.
+	# Dialog Functions.
 	#
 	def startDialog(self, dialog):
 		if self._shownDialog == True:
@@ -433,7 +443,7 @@ class TermApp(urwid.WidgetWrap):
 		self._currentDialog    = None
 
 	#
-	# Palette functions
+	# Palette Functions
 	#
 	def addPaletteColorEntry(self, palette_entry):
 		self._palette.append(palette_entry)
@@ -478,7 +488,7 @@ class TermApp(urwid.WidgetWrap):
 		self.onPageChanged()
 
 	#
-	# Buffer functions.
+	# Print Functions.
 	#
 	def print(self, text, text_style = "normal_color"):
 		splitted_text = text.split("\n")
@@ -534,15 +544,5 @@ class TermApp(urwid.WidgetWrap):
 				current_page = self.chapters.getCurrentPage()
 				if page == current_page:
 					page.setFocusToLastLine()
-
-	#
-	# Timer functions.
-	#
-	def startTimer(self, callback, user_data=None, seconds=1):
-		return self.loop.set_alarm_in(seconds, _mainapp_call_timer_callback, user_data=(callback, user_data))
-
-
-	def cancelTimer(self, timer_handle):
-		return self.loop.remove_alarm(timer_handle)
 
 
