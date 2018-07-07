@@ -200,8 +200,9 @@ class TermApp(urwid.WidgetWrap):
 		return True
 
 
-	def onCommandError(self, command, params):
-		self.printErr("ERR: Unknown command: %s." % (command))
+	def onCommandError(self, message, command, params):
+		if message == "unknown":
+			self.printErr("ERR: Unknown command: %s." % (command))
 		return True
 
 

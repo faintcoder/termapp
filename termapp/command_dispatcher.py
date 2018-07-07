@@ -119,7 +119,7 @@ class CommandDispatcher():
 
 	def dispatch(self, command_name, params):
 		if command_name not in self.commands:
-			return False
+			return (False, "unknown")
 		# Load the `CommandDescription` object.
 		command_description = self.commands[command_name]
 		# Create a `Command` object.
@@ -132,7 +132,9 @@ class CommandDispatcher():
 		# First start the `Command` object.
 		# It means that it will call the "waiting"
 		# callback, if necessary.
-		command.start()
+		result = command.start()
+		if not result:
+			return (False, "start_error")
 		# Refresh screen
 		self.mainApplication.flush()
 		if command_description.deferred == False:
@@ -153,7 +155,7 @@ class CommandDispatcher():
 			# thread, or threadpool, so enqueue the `Command`
 			# object to the secondary thread's queue.
 			self.commandExecutor.enqueueTask(command)
-		return True # Command is a valid command
+		return (True, "success") # Command is a valid command
 
 
 

@@ -17,8 +17,10 @@ class TaskCommand(TaskBase):
 		# Then we pass command and parameters to
 		# the command dispatcher object.
 		result = self.mainApplication.commandDispatcher.dispatch(self.command_name, self.params)
-		if not result:
-			self.mainApplication.onCommandError(self.command_name, self.params)
+		success = result[0]
+		message = result[1]
+		if not success:
+			self.mainApplication.onCommandError(message, self.command_name, self.params)
 			return False
 		return True
 

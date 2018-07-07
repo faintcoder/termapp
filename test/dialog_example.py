@@ -24,9 +24,9 @@ class TerminalDialogExample(termapp.TermApp):
 		self.printSuccess("echo:  " + command.params)
 
 
-	def onDialogResult(self, result):
-		self.print(str(result))
-		return super().onDialogResult(result)
+	def onDialogResult(self, dialog):
+		self.print(str(dialog.result))
+		return super().onDialogResult(dialog)
 
 
 	def onStart(self):

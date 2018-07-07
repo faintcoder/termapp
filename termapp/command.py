@@ -30,7 +30,7 @@ class Command():
 		# Starting a command means call 
 		callback_global_waiting     = self.commandDescription.callbackWaiting
 		callback_local_waiting      = self.callbackWaiting
-		result                      = None
+		result                      = True
 		if callback_local_waiting:
 			result = callback_local_waiting(self)
 		elif callback_global_waiting:
