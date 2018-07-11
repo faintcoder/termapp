@@ -36,6 +36,9 @@ class Command():
 			self.noptions             = 0
 
 
+	#
+	# Executive Functions.
+	#
 	def start(self):
 		# Starting a command means call 
 		callback_global_waiting     = self.commandDescription.callbackWaiting
@@ -88,5 +91,14 @@ class Command():
 				callback_local_error(self)
 			elif callback_global_error:
 				callback_global_error(self)
+
+	#
+	# Utility Functions.
+	#
+	def checkForInvalidOption(self, all_valid_options):
+		for opt in self.options:
+			if opt not in all_valid_options:
+				return opt
+		return None
 
 
