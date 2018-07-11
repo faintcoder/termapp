@@ -9,6 +9,7 @@ class Command():
 		command                     = None,
 		command_description         = None,
 		params                      = None,
+		options                     = None,
 		on_success                  = None,
 		on_error                    = None,
 		on_waiting                  = None,
@@ -19,11 +20,20 @@ class Command():
 		self.command                = command
 		self.commandDescription     = command_description
 		self.params                 = params
+		self.options                = options
 		self.callbackWaiting        = on_waiting
 		self.callbackSuccess        = on_success
 		self.callbackError          = on_error
 		self.errorMessage           = error_message
 		self.userData               = user_data
+		if params:
+			self.nparams              = len(params)
+		else:
+			self.nparams              = 0
+		if options:
+			self.noptions             = len(options)
+		else:
+			self.noptions             = 0
 
 
 	def start(self):

@@ -25,12 +25,25 @@ class TerminalLineExample(termapp.TermApp):
 			callback     = self.echo,
 			params_join  = True
 		))
+		command_list.append(termapp.CommandDescription(
+			name         = "opt",
+			alias        = "o",
+			callback     = self.opt,
+			params_have_options = True
+		))
 		self.commandDispatcher.registerCommandList(command_list)
 
 
 	def echo(self, command):
 		# This is an example of how 
 		self.print("echo:  " + command.params)
+		return True
+
+
+	def opt(self, command):
+		self.print("command opt: params:%s  options:%s" % (str(command.nparams), str(command.noptions)))
+		self.print("  params:  %s" % (" ".join(command.params)))
+		self.print("  options: %s" % (" ".join(command.options)))
 		return True
 
 

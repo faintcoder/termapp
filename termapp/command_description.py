@@ -9,6 +9,8 @@ class CommandDescription():
 		callback,
 		params_ignore               = False,
 		params_join                 = False,
+		params_have_options         = True,
+		options_delimiter           = "-",
 		deferred                    = False,
 		deferred_completion         = False,
 		on_success                  = None,
@@ -27,6 +29,11 @@ class CommandDescription():
 		# If this option is true, params will be
 		# "a b c" instead of ["a", "b", "c"]
 		self.paramsJoin             = params_join
+		# If this is true, the command parse will
+		# search for command options, or those
+		# tokens which start with the option delimiters.
+		self.paramsParseOptions     = params_have_options
+		self.optionsDelimiter       = options_delimiter
 		# If this option is true, the main callback
 		# will be called by a secondary thread, and
 		# not by the main thread.

@@ -4,25 +4,19 @@ from .task_base           import TaskBase
 
 class TaskCommand(TaskBase):
 
-	def __init__(self, main_application, command_name, params):
+	def __init__(self, main_application, command_line):
 		super().__init__(main_application=main_application)
-		self.command_name  = command_name
-		self.params        = params
+		self.command_line  = command_line
 		
 
 	def execute(self):
 		# Ignore empty strings
-		if self.command_name == "" or self.command_name == " ":
+		if self.command_line == "" or self.command_line == " ":
 			return False
 		# Then we pass command and parameters to
 		# the command dispatcher object.
-		result = self.mainApplication.commandDispatcher.dispatch(self.command_name, self.params)
-		success = result[0]
-		message = result[1]
-		if not success:
-			self.mainApplication.onCommandError(message, self.command_name, self.params)
-			return False
-		return True
+		command_dispatcher = self.mainApplication.commandDispatcher
+		return command_dispatcher.dispatch(self.command_line)
 
 
 class TaskCommandCompleter(TaskBase):

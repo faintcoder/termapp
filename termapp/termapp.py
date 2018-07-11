@@ -200,9 +200,8 @@ class TermApp(urwid.WidgetWrap):
 		return True
 
 
-	def onCommandError(self, message, command, params):
-		if message == "unknown":
-			self.printErr("ERR: Unknown command: %s." % (command))
+	def onCommandError(self, command_name):
+		self.printErr("ERR: Unknown command: %s." % (command_name))
 		return True
 
 
@@ -279,11 +278,14 @@ class TermApp(urwid.WidgetWrap):
 		result = self.commandDispatcher.start()
 		if not result:
 			return False
+		# Register on command error callback within the
+		# CommandDispatcher object.
+		self.commandDispatcher.onCommandError = self.onCommandError
 		# Now that we have started all the facilities,
 		# let's call user callback. If it will return
 		# true, system will start.
 		if self.onStart():
-				return True
+			return True
 		return False
 
 
@@ -345,34 +347,24 @@ class TermApp(urwid.WidgetWrap):
 			splitter = self.commandSplitter
 		command_text = command_text.split(splitter)
 		# Add splitted commands to the final list.
-		for command_unit in command_text:
-			if command_unit == "":
+		for command_line in command_text:
+			if command_line == "":
 				continue
-			command_unit = command_unit.strip()
-			command_list.append(command_unit)
+			command_line = command_line.strip()
+			command_list.append(command_line)
 		# Then, for each command specified, let's have
 		# command,params and enqueue that tuple into the
 		# "commands to process" deque.
-		for command_unit in command_list:
+		for command_line in command_list:
 			# Call the `onText` callback, and if it returns
 			# true, we can process the command.
-			if self.onText(command_unit):
-				# Split the command text to read command
-				# parameters.
-				params   = command_unit.split(" ")
-				# The first string of the splitted command
-				# text is the command itself.
-				command  = params[0]
-				# To get the remaining parameters we remove
-				# the head from the list (the command).
-				params.pop(0)
+			if self.onText(command_line):
 				# Create and append a `Task` object to the
-				# main application task queue, to process and 
-				# execute the user typed command.
+				# main application task queue, that will
+				# give the command line to the dispatcher.
 				task = TaskCommand(
 					main_application  = self,
-					command_name      = command,
-					params            = params
+					command_line      = command_line
 				)
 				self.enqueueTask(task)
 		return True
