@@ -31,47 +31,47 @@ class TermApp(urwid.WidgetWrap):
 
 	def __init__(
 		self,
-		prompt_caption                  = DEFAULT_PROMPT_CAPTION,
-		create_header                   = True,
-		create_footer                   = True,
-		create_header_divider           = False
+		prompt_caption                    = DEFAULT_PROMPT_CAPTION,
+		create_header                     = True,
+		create_footer                     = True,
+		create_header_divider             = False
 	):
 		# Public properties.
-		self.wheelScrollLines           = 1
-		self.showPageDescription        = True
-		self.pageDescriptionSeconds     = DEFAULT_PAGE_NOTIFIER_SECS
-		self.quitOnESC                  = False
-		self.quitDialogYesNo            = True
-		self.commandSplitter            = ";"
-		self.logger                     = None
-		self.loop                       = None
-		self.screen                     = None
+		self.wheelScrollLines             = 1
+		self.showPageDescription          = True
+		self.pageDescriptionSeconds       = DEFAULT_PAGE_NOTIFIER_SECS
+		self.quitOnESC                    = False
+		self.quitDialogYesNo              = True
+		self.commandSplitter              = ";"
+		self.logger                       = None
+		self.loop                         = None
+		self.screen                       = None
 		# Main application task queue.
-		self.taskQueue                  = WorkerQueue()
+		self.taskQueue                    = WorkerQueue()
 		# Create the command dispatcher.
-		self.commandDispatcher          = CommandDispatcher(self)
+		self.commandDispatcher            = CommandDispatcher(self)
 		# Register basic commands.
-		quit_description                = CommandDescription(name="quit", callback=self.quit, alias="q", params_ignore=True)
+		quit_description                  = CommandDescription(name="quit", callback=self.quit, alias="q", params_ignore=True)
 		self.commandDispatcher.registerCommand(quit_description)
 		# Create prompt object
-		self.prompt                     = Prompt(prompt_caption=prompt_caption)
+		self.prompt                       = Prompt(prompt_caption=prompt_caption)
 		# Create chapters and pages.
-		self.chapters                   = ChapterManager()
+		self.chapters                     = ChapterManager()
 		# Get screen object and screen's cols/rows
-		self.screen                     = urwid.raw_display.Screen()
-		self.totalColumns               = self.screen.get_cols_rows()[0]
-		self.totalRows                  = self.screen.get_cols_rows()[1]
+		self.screen                       = urwid.raw_display.Screen()
+		self.totalColumns                 = self.screen.get_cols_rows()[0]
+		self.totalRows                    = self.screen.get_cols_rows()[1]
 		# Create the header object.
-		self.header                     = Header(create_text_header=create_header, 
+		self.header                       = Header(create_text_header=create_header, 
 																							create_divider=create_header_divider)
 		# Create the footer object.
-		self.footer                     = Footer(self.prompt.widget, create_text_footer=create_footer)
+		self.footer                       = Footer(self.prompt.widget, create_text_footer=create_footer)
 		#Get the current page `urwid.ListBox` object.
-		self.body                       = self.chapters.getCurrentPage().widgetListBox
+		self.body                         = self.chapters.getCurrentPage().widgetListBox
 		# Create the main application window, the `urwid.Frame` object,
 		# and assign it to the `urwid.WidgetWrap` internal `_w` variable,
 		# so we can receive keyboard/mouse events.
-		self.frame                      = urwid.Frame(
+		self.frame                        = urwid.Frame(
 																										header      = self.header.widget,
 																										body        = self.body,
 																										footer      = self.footer.widget,
@@ -81,12 +81,12 @@ class TermApp(urwid.WidgetWrap):
 		# Get data to calculate urwid.Frame's body columns and rows,
 		# and store the results in a `Geometry` object.
 		# This is needed for the scrolling system.
-		frame_padding                   = self._w.frame_top_bottom((1000,1000), True)[0]
-		header_rows                     = frame_padding[0]
-		footer_rows                     = frame_padding[1]
-		body_rows                       = self.totalRows - (header_rows + footer_rows)
-		body_columns                    = self.totalColumns
-		self.geometry                   = Geometry(body_rows, body_columns, header_rows, footer_rows)
+		frame_padding                     = self._w.frame_top_bottom((1000,1000), True)[0]
+		header_rows                       = frame_padding[0]
+		footer_rows                       = frame_padding[1]
+		body_rows                         = self.totalRows - (header_rows + footer_rows)
+		body_columns                      = self.totalColumns
+		self.geometry                     = Geometry(body_rows, body_columns, header_rows, footer_rows)
 		# Create color palette.        foreground         background
 		self._palette = [
         ("prompt_color_flash"     , "black"        , "yellow"         ),
@@ -130,6 +130,9 @@ class TermApp(urwid.WidgetWrap):
 	# Urwid events callbacks.
 	#
 	def keypress(self, size, key):
+		""" Urwid callback.
+				This will be called for each keyboard event.
+		"""
 		# If a dialog is shown, send keyboard
 		# input only to the dialog window.
 		if self._shownDialog:
@@ -175,6 +178,9 @@ class TermApp(urwid.WidgetWrap):
 
 
 	def mouse_event(self, size, event, button, col, row, focus):
+		""" Urwid callback.
+				This will be called for each mouse event.
+		"""
 		if button in (4, 5):
 			page = self.chapters.getCurrentPage()
 			# Mousewheel has been rotated. Let's scroll.
@@ -193,19 +199,39 @@ class TermApp(urwid.WidgetWrap):
 	# Local events callbacks.
 	#
 	def onKeyPress(self, key):
+		""" Termapp callback.
+				This will be called for each keyboard event.
+				Return `True` to pass through, or `False` to block the event.
+		"""
 		return True
 
 
 	def onText(self, command_text):
+		""" Termapp callback.
+				This will be called every time the user types a command in the
+				command line and presses return.
+				Return `True` to pass through, or `False` to block the event.
+		"""
 		return True
 
 
 	def onCommandError(self, command_name):
+		""" Termapp callback.
+				This will be called every time the user types a command in the
+				command line and presses return, and the command is not a valid
+				registered command.
+				Return `True` to pass through, or `False` to block the event.
+		"""
 		self.printErr("ERR: Unknown command: %s." % (command_name))
 		return True
 
 
 	def onStart(self):
+		""" Termapp callback.
+				This will be called when the application is starting.
+				This is the ideal time to register commands, and initialize
+				stuff.
+		"""
 		return True
 
 
@@ -214,12 +240,20 @@ class TermApp(urwid.WidgetWrap):
 
 
 	def onIdle(self):
+		""" Termapp callback.
+				This will be called when the application is doing nothing,
+				and the loop is idling.
+		"""
 		# Execute all pending `Task` objects.
 		self.processTasks()
 		return True
 
 
 	def onTask(self, task):
+		""" Termapp callback.
+				This will be called when the application has a `Task` object
+				to execute.
+		"""
 		# Execute `Task` object.
 		if not task.cancel:
 			task.execute()
@@ -233,6 +267,9 @@ class TermApp(urwid.WidgetWrap):
 
 
 	def onDialogResult(self, dialog):
+		""" Termapp callback.
+				This will be called when the user interacted with a dialog.
+		"""
 		must_exit = False
 		# Implementing the Yes/No dialog that asks the user
 		# to really quit or not.
@@ -244,6 +281,9 @@ class TermApp(urwid.WidgetWrap):
 
 
 	def onPageChanged(self):
+		""" Termapp callback.
+				This will be called when the user changed the current page.
+		"""
 		if self.showPageDescription:
 			current_page_string = self.chapters.getCurrentChapterString()
 			if not self._pageNotifier or self._pageNotifier.expired:
@@ -261,6 +301,10 @@ class TermApp(urwid.WidgetWrap):
 	# Main Functions.
 	#
 	def start(self):
+		""" Termapp function.
+				This function will create the `urwid.Loop` object,
+				and initialize everything.
+		"""
 		# Create the loop object.
 		loop = Loop(main_application=self, palette=self._palette)
 		# Set the loop object to the objects which needs it.
@@ -290,12 +334,21 @@ class TermApp(urwid.WidgetWrap):
 
 
 	def run(self):
+		""" Termapp function.
+				Start running the main loop.
+		"""
 		if self.loop:
 			return self.loop.run()
 		return False
 
 
 	def quit(self):
+		""" Termapp function.
+				Quit gracefully the application.
+				The main function to quit the application is `self.exit()`,
+				but the user should call this to gracefully exit.
+				E.g. display quit Yes/No dialog.
+		"""
 		if self.quitDialogYesNo:
 			self.startDialogText(
 				text             = "Are you sure to quit?",
@@ -309,6 +362,9 @@ class TermApp(urwid.WidgetWrap):
 
 
 	def exit(self):
+		""" Termapp function.
+				Unload things, exit from the `urwid.Loop` and close the application.
+		"""
 		# Stop prompt from flashing, if necessary.
 		if self.prompt.isFlashing():
 			self.prompt.stopFlashing()
@@ -323,14 +379,26 @@ class TermApp(urwid.WidgetWrap):
 
 
 	def flush(self):
+		""" Termapp function.
+				Flush the screen.
+		"""
 		self.loop.flush()
 
 
 	def wakeup(self):
+		""" Termapp function.
+				If the `urwid.Loop` is sleeping, wake up it.
+		"""
 		self.loop.wakeup()
 
 
 	def sendCommand(self, command_text):
+		""" Termapp function.
+				Calling this function is like typing a command to the command
+				line and press enter.
+				This function supports also multiple commands at once, with
+				command splitting.
+		"""
 		# If null text specified as a command, return False.
 		if len(command_text) == 0:
 			return False
@@ -373,17 +441,28 @@ class TermApp(urwid.WidgetWrap):
 	# Task Functions.
 	#
 	def enqueueTask(self, task):
+		""" Termapp function.
+				Enqueue a `Task` object to be executed.
+		"""
 		self.taskQueue.enqueueTask(task)
 		return True
 
 
 	def enqueueTaskAndWakeup(self, task):
+		""" Termapp function.
+				Enqueue a `Task` object to be executed and wake up the main loop.
+		"""
 		self.enqueueTask(task)
 		self.wakeup()
 		return True
 
 
 	def processTasks(self):
+		""" Termapp function.
+				Complete tasks execution.
+				Each enqueue task will be completed and 'sent' to the callback
+				of this app: `self.onTask()`.
+		"""
 		self.taskQueue.completeTasks(callback=self.onTask)
 		return True
 
@@ -391,6 +470,11 @@ class TermApp(urwid.WidgetWrap):
 	# Dialog Functions.
 	#
 	def startDialog(self, dialog):
+		""" Termapp function.
+				Start a new `Dialog` object that will overlay the application.
+				Dialogs will "steal" mouse and keyboard input, until they won't
+				be canceled.
+		"""
 		if self._shownDialog == True:
 			return
 		self._w.body = dialog.overlay
@@ -400,6 +484,9 @@ class TermApp(urwid.WidgetWrap):
 
 
 	def startDialogText(
+		""" Termapp function.
+				Useful wrapper: start a `Dialog` object containing only text.
+		"""
 		self,
 		text,		
 		title            = "Warning!",
@@ -421,6 +508,9 @@ class TermApp(urwid.WidgetWrap):
 
 
 	def startDialogUserPass(self, tag = "tag"):
+		""" Termapp function.
+				Useful wrapper: start a `Dialog` object containing user/pass input.
+		"""
 		if self._shownDialog == True:
 			return
 		dialog = DialogUserPass(self, tag=tag)
@@ -428,6 +518,10 @@ class TermApp(urwid.WidgetWrap):
 
 
 	def cancelDialog(self):
+		""" Termapp function.
+				Cancel the `Dialog` object.
+				User keyboard and mouse input will come back to the 'normal' application.
+		"""
 		if self._shownDialog == False:
 			return
 		self._w.body = self.body
@@ -439,12 +533,18 @@ class TermApp(urwid.WidgetWrap):
 	# Palette Functions
 	#
 	def addPaletteColorEntry(self, palette_entry):
+		""" Termapp function.
+				Add a new palette color entry.
+		"""
 		self._palette.append(palette_entry)
 
 	#
 	# Page function.
 	#
 	def switchToNextPage(self):
+		""" Termapp function.
+				Switch to the next page of the current chapter.
+		"""
 		if self._shownDialog == True:
 			return 
 		result = self.chapters.currentChapter.switchToNextPage()
@@ -455,6 +555,9 @@ class TermApp(urwid.WidgetWrap):
 
 
 	def switchToPrevPage(self):
+		""" Termapp function.
+				Switch to the previous page of the current chapter.
+		"""
 		if self._shownDialog == True:
 			return
 		result = self.chapters.currentChapter.switchToPrevPage()
@@ -465,6 +568,9 @@ class TermApp(urwid.WidgetWrap):
 
 
 	def switchToNthPage(self, page_index):
+		""" Termapp function.
+				Switch to the Nth page of the current chapter.
+		"""
 		if self._shownDialog == True:
 			return
 		result = self.chapters.currentChapter.switchToNthPage(page_index)
@@ -475,6 +581,9 @@ class TermApp(urwid.WidgetWrap):
 
 
 	def switchToChapter(self, chapter_name):
+		""" Termapp function.
+				Switch to another chapter.
+		"""
 		if self._shownDialog == True:
 			return 
 		self.chapters.switchToChapter(chapter_name)
@@ -483,42 +592,73 @@ class TermApp(urwid.WidgetWrap):
 	#
 	# Print Functions.
 	#
-	def print(self, text, text_style = "normal_color"):
+	def print(self, text, style = "normal_color"):
+		""" Termapp function.
+				Useful wrapper: add a line to the current page with the
+				text and style specified as parameters.
+				This function will also split multiple lines passed with
+				the `\n` character.
+		"""
 		text_string = str(text)
 		splitted_text = text_string.split("\n")
 		for line in splitted_text:
-			self.currentPageAppendText(line, text_style)
+			self.currentPageAppendText(line, style)
 
 
 	def printHighlight(self, text):
+		""" Termapp function.
+				Useful wrapper: like print, but will add text with
+				highlight style.
+		"""
 		self.print(text, "highlight_color")
 
 
 	def printErr(self, text):
+		""" Termapp function.
+				Useful wrapper: like print, but will add text with
+				error style.
+		"""
 		self.print(text, "error_color")
 
 
 	def printWarn(self, text):
+		""" Termapp function.
+				Useful wrapper: like print, but will add text with
+				warning style.
+		"""
 		self.print(text, "warning_color")
 
 
 	def printSuccess(self, text):
+		""" Termapp function.
+				Useful wrapper: like print, but will add text with
+				success style.
+		"""
 		self.print(text, "success_color")
 
 
 	def currentPageAppendLine(self, line):
+		""" Termapp function.
+				Append a new `Line` object to the current page of the current chapter.
+		"""
 		current_page = self.chapters.getCurrentPage()
 		current_page.bufferAddLine(line)
 		current_page.setFocusToLastLine()
 
 
 	def currentPageAppendText(self, text, style = "normal_color"):
+		""" Termapp function.
+				Append a new line of text to the current page.
+		"""
 		current_page = self.chapters.getCurrentPage()
 		current_page.bufferAddLineText(text, style)
 		current_page.setFocusToLastLine()
 
 
 	def pageAppendText(self, page_index, text, style = "normal_color"):
+		""" Termapp function.
+				Append a new line of text to a certain page within the current chapter.
+		"""
 		chapter = self.chapters.getCurrentChapter()
 		if chapter:
 			page = chapter.getPageFromIndex(page_index)
@@ -530,6 +670,9 @@ class TermApp(urwid.WidgetWrap):
 
 
 	def appendText(self, chapter_name, page_index, text, style = "normal_color"):
+		""" Termapp function.
+				Append a new line of text to a page of a chapter.
+		"""
 		chapter = self.chapters.getChapter(chapter_name)
 		if chapter:
 			page = chapter.getPageFromIndex(page_index)
