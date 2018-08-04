@@ -484,7 +484,8 @@ class TermApp(urwid.WidgetWrap):
 	# Print Functions.
 	#
 	def print(self, text, text_style = "normal_color"):
-		splitted_text = text.split("\n")
+		text_string = str(text)
+		splitted_text = text_string.split("\n")
 		for line in splitted_text:
 			self.currentPageAppendText(line, text_style)
 

@@ -77,7 +77,7 @@ class Loop(urwid.MainLoop):
 			seconds     = seconds,
 			callback    = callback,
 			user_data   = user_data,
-			repeats     = 0
+			repeats     = repeats
 		)
 		# Start the timer.
 		self.startTimerEntry(timer_entry)
