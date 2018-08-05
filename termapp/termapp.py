@@ -484,9 +484,6 @@ class TermApp(urwid.WidgetWrap):
 
 
 	def startDialogText(
-		""" Termapp function.
-				Useful wrapper: start a `Dialog` object containing only text.
-		"""
 		self,
 		text,		
 		title            = "Warning!",
@@ -494,6 +491,9 @@ class TermApp(urwid.WidgetWrap):
 		buttons          = 2,
 		button_captions  = ["OK", "Cancel"]
 	):
+		""" Termapp function.
+				Useful wrapper: start a `Dialog` object containing only text.
+		"""
 		if self._shownDialog == True:
 			return
 		dialog = DialogText(
